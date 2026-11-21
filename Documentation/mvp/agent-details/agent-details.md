@@ -2,6 +2,8 @@
 
 Use this document as the build reference for the four AI agents and their handoffs in the MVP. The [complete product scope](../../complete%20scope/complete-scope.md) covers the wider marketplace. This document records the team's four-agent MVP direction and the behavior each agent must support. Examples use fictional property data. The fields described here express the information that must travel between components. See the [MVP technology stack](../teach-stack/tech-stack.md) for model, storage, orchestration, and deployment choices. Exact schemas and UI design remain implementation decisions.
 
+See the [container overview](../containers/containers.md) for runtime responsibilities and open decisions. The [Agent API](../containers/agent-api/agent-api.md) runs the [Seller Agent](../containers/agent-api/seller-agent.md) and [Buyer Agent](../containers/agent-api/buyer-agent.md) interactions. The [Agent worker](../containers/agent-worker/agent-worker.md) runs the [Property Inspector](../containers/agent-worker/property-inspector-agent.md) and [Property Showcase Creator](../containers/agent-worker/property-showcase-creator-agent.md) jobs in the proposed layout.
+
 ## 1. MVP workflow
 
 The MVP supports **houses, land, and apartments**. Seller onboarding, photo review, showcase generation, buyer discovery, and property questions work for all three. The relevant listing fields and photo suggestions vary by property type.
