@@ -23,11 +23,11 @@ Run the interactive Python FastAPI process. Use LangGraph to coordinate agent st
 
 ## Background job acceptance
 
-Verify the seller's authority and resolve the input revision through Property service. Use one transaction to save the job and its pending dispatch record in the proposed outbox design. Return a durable job ID and an accepted state after the transaction commits. The dispatch process publishes the job ID to [RabbitMQ](../rabbitmq.md). Scope job status and results to the requesting actor and authorized listing. A broker outage may delay work while the durable pending job remains visible.
+Verify the seller's authority and resolve the input revision through Property service. Save the job and its pending dispatch record in one transaction. Return a durable job ID and an accepted state after the transaction commits. The [Agent dispatcher](../agent-dispatcher.md) publishes the task to RabbitMQ. Scope job status and results to the requesting actor and authorized listing. A broker outage may delay work while the durable pending job remains visible.
 
 ## Guardrails and operations
 
 - Treat chat text, listings, seller replies, and media as untrusted model inputs. Bind allowed operations to the workflow in code. Model output can propose a change or display a confirmation action. A domain service enforces the explicit user approval before committing it.
 - Keep exact addresses, raw coordinates, phone numbers, and credentials out of ordinary model context and traces. A protected result is resolved through a separate backend operation after the grant is checked.
 - Record safe identifiers, run outcome, provider latency, and model usage. Report dependency errors without exposing inputs, inaccessible records, or credentials.
-- Verify separate property scope, a missing-fact response, a retried chat turn, malformed model output, and durable job acceptance during a broker outage. Finalize turn delivery, service authentication, and dispatch process placement before implementing those contracts.
+- Verify separate property scope, a missing-fact response, a retried chat turn, malformed model output, and durable job acceptance during a broker outage. Finalize turn delivery and service authentication before implementing those contracts.

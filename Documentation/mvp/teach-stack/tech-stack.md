@@ -16,7 +16,7 @@ Use this document for the MVP's technology and deployment decisions and [MVP age
 | Database and search | Amazon RDS for PostgreSQL, pgvector, and an embedding model | Use SQLAlchemy 2.x as the Python backend ORM for application records in shared RDS PostgreSQL. Start with structured listing filters and a pending-request rule based on the property and the underlying fact. Revisit embeddings and pgvector if evaluation shows a gap in search or question matching. |
 | Files | Amazon S3 | Use shared S3 for listing photos and other files the application supports. Store object references in PostgreSQL and authorize file access through the backend. |
 | Identity | Amazon Cognito with Auth.js and backend-enforced authorization | Use a shared Cognito user pool from day one. The proposal's Auth.js integration is the starting approach for Next.js. FastAPI verifies the authenticated identity and enforces ownership, inquiry access, and disclosure permissions. |
-| Jobs and observability | RabbitMQ, Celery, GitHub Actions, OpenTelemetry, and structured logging | Persist workflow state and use structured logs for the MVP. Use GitHub Actions for routine checks as the team sets them up. |
+| Jobs and observability | RabbitMQ, Celery, GitHub Actions, OpenTelemetry, and structured logging | Use RabbitMQ for background job delivery and Celery for task execution. Persist workflow state and use structured logs. Use GitHub Actions for routine checks as the team sets them up. |
 
 The workflow coordinator runs the handoffs between the four agents. PostgreSQL is the application source of truth for listings, requests, approved facts, and disclosure grants.
 

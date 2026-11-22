@@ -1,6 +1,6 @@
 # EstateFlow AI MVP Containers
 
-Use this reference to implement and review the proposed six-container layout. The [MVP agent details](../agent-details/agent-details.md) define user-visible agent behavior. The [MVP tech stack](../teach-stack/tech-stack.md) defines the selected tools and deployment constraints. Resolve the open decisions below before implementing the affected boundaries.
+Use this reference to implement and review the MVP layout with seven container roles. The [MVP agent details](../agent-details/agent-details.md) define user-visible agent behavior. The [MVP tech stack](../teach-stack/tech-stack.md) defines the selected tools and deployment constraints. Resolve the open decisions below before implementing the affected boundaries.
 
 ## Container directory
 
@@ -10,10 +10,11 @@ Use this reference to implement and review the proposed six-container layout. Th
 | `property-service` | Owns listing drafts, property facts, photo metadata, showcase revisions, publication, and search. | [Property service](property-service.md) |
 | `engagement-service` | Owns conversations, seller inquiries, approved answers, and access grants for private details. | [Engagement service](engagement-service.md) |
 | `agent-api` | Runs interactive Seller and Buyer Agent workflows and accepts requests for background AI jobs. | [Agent API](agent-api/agent-api.md) |
+| `agent-dispatcher` | Finds pending dispatch records in PostgreSQL and publishes job messages to RabbitMQ. | [Agent dispatcher](agent-dispatcher.md) |
 | `agent-worker` | Runs the Property Inspector and Property Showcase Creator workflows from queued jobs. | [Agent worker](agent-worker/agent-worker.md) |
-| `rabbitmq` | Delivers background job messages to the worker in the proposed RabbitMQ and Celery setup. | [RabbitMQ](rabbitmq.md) |
+| `rabbitmq` | Queues background jobs and delivers them to Celery workers. | [RabbitMQ](rabbitmq.md) |
 
-`agent-api` and `agent-worker` can use the same Docker image with separate startup commands. The container names describe runtime roles. The four agents are workflows within those two roles. Amazon RDS for PostgreSQL, Cognito, and S3 are shared managed AWS services. The direct Anthropic API is an external dependency.
+`agent-api`, `agent-dispatcher`, and `agent-worker` use the same Python Docker image with separate startup commands. Agent API and the worker run the four agent workflows. Amazon RDS for PostgreSQL, Cognito, and S3 are shared managed AWS services. The direct Anthropic API is an external dependency.
 
 ```mermaid
 flowchart LR
@@ -24,7 +25,7 @@ flowchart LR
     UI --> A["agent-api"]
     A --> P
     A --> E
-    A -->|Background job dispatch| Q["rabbitmq"]
+    D["agent-dispatcher"] -->|Publish jobs| Q["rabbitmq"]
     Q --> W["agent-worker"]
     W --> P
     P --> S3["S3"]
@@ -33,11 +34,12 @@ flowchart LR
     W --> Claude
     P --> DB[("Shared PostgreSQL")]
     E --> DB
-    A --> DB
+    A -->|Save jobs and dispatch records| DB
+    D <-->|Read and update dispatch records| DB
     W --> DB
 ```
 
-The dispatch arrow shows logical ownership. The process that publishes from the durable dispatch record is still open. The diagram omits the browser's direct use of authorized S3 upload and download URLs.
+For direct S3 uploads and downloads, the browser uses a URL authorized by Property service.
 
 ## Cross-container rules
 
@@ -53,7 +55,7 @@ The dispatch arrow shows logical ownership. The process that publishes from the 
 | Decision | What to settle |
 | --- | --- |
 | Service and database access | Agree how internal calls authenticate and carry user context, where protected values are stored and returned, how PostgreSQL access is scoped by owner, and which tool and process apply shared migrations. |
-| Background delivery | Confirm RabbitMQ and Celery for the MVP, choose where outbox dispatch runs, and settle how local and hosted workers isolate jobs on shared AWS data. Set job retry, timeout, and terminal failure behavior. |
+| Background delivery | Settle how local and hosted workers isolate jobs on shared AWS data. Define job claim recovery, retry limits, timeouts, and terminal failure behavior. |
 | API and UI contracts | Agree request and response schemas, chat delivery and refresh behavior for in-flight turns, job status updates, and the confirmation and error states each screen must handle. |
 | Product and test fixtures | Decide minimum publication fields, answer visibility options, and fixtures for houses, land, and apartments. Verify the happy path, cross-user authorization, retry safety, and model output quality. |
 | Hosted deployment | Choose hosting, broker persistence and recovery configuration, and a launch and smoke-test procedure that fits the remaining credits and submission requirements. |

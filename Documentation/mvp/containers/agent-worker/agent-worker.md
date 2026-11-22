@@ -4,7 +4,9 @@
 
 ## Runtime and inputs
 
-Run the background worker from the shared Python agent image. Use the proposed Celery and RabbitMQ integration to receive jobs. Reuse the same Claude client, workflow definitions, output validation, and guardrails as Agent API. Run the workflow assigned to each authorized job.
+Run the Celery worker from the shared Python agent image and receive jobs through RabbitMQ. Reuse the same Claude client, workflow definitions, output validation, and guardrails as Agent API. Run the workflow assigned to each authorized job.
+
+Start with one `agent-worker` container per environment and configure Celery with two execution slots. Either slot can run an inspection or showcase job. Additional ready jobs wait for capacity.
 
 | Job | Inputs and result | Reference |
 | --- | --- | --- |

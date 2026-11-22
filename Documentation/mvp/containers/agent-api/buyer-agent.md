@@ -9,7 +9,7 @@ Turn natural-language input into structured requirements and preferences, then c
 ## Property Chat
 
 1. Resolve the conversation, buyer, and selected listing through [Engagement service](../engagement-service.md). Scope listing tools to that listing.
-2. Load relevant conversation messages, published listing facts, and approved answers visible to that buyer. If the buyer asks “Is it covered?” after discussing parking, use the earlier turn to resolve the reference while grounding the answer in the listing and authorized facts.
+2. For the MVP, pass Claude all approved facts for the selected listing that the buyer is authorized to see, including any approved inquiry answers available to that buyer. Apply the listing scope and visibility rules before building the prompt. Include the conversation messages needed to interpret the question. If the buyer asks “Is it covered?” after discussing parking, use the earlier turn to resolve the reference and the authorized facts to answer.
 3. Preserve the source and qualifiers of each claim. If covered parking is unknown, explain what remains unknown and offer the buyer a confirmation action to ask the seller.
 4. On confirmation, pass the inquiry to Engagement service. Equivalent pending inquiries can share one seller inbox item. Keep the original buyer and property conversation for the later answer or status.
 5. Use the authorized outcome to show an approved answer, a pending status, or a decline in the original chat. A later question can reuse an approved answer within its recorded visibility. The [Seller Agent](seller-agent.md) handles the owner-facing workflow.
