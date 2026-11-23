@@ -21,7 +21,7 @@ Run a Python FastAPI application with SQLAlchemy access to the property records 
 
 ## Interactions and rule enforcement
 
-The [Frontend](frontend.md) uses the listing and upload operations. The agent containers use the same domain rules for AI-assisted reads and writes. An approved inquiry answer belongs to [Engagement service](engagement-service.md). Incorporating that fact into the public listing requires a separate authorized listing change. For a protected buyer read, resolve only the detail IDs Engagement authorized for that buyer and listing. Check the listing, kind, and active state before returning a current value.
+The [Frontend](frontend.md) uses the listing and upload operations. The agent containers use the same domain rules for AI-assisted reads and writes. An approved inquiry answer belongs to [Engagement service](engagement-service.md). Property owns the immutable structured value. Share answer updates the draft and buyer-visible fact through a narrow Property operation within the Engagement transaction. Publish updates the buyer-visible pointers for changed public facts in the same transaction as the publication pointer. See the [database contracts](../database/contracts.md#which-value-a-buyer-sees). For a protected buyer read, resolve only the detail IDs Engagement authorized for that buyer and listing. Check the listing, kind, and active state before returning a current value.
 
 Keep searchable facts separate from derived suggestions. Use revision checks for conflicting seller edits. Use stable operation identifiers for retryable registration, result submission, and publication. Log safe record identifiers and outcome codes for upload, draft, and publish failures.
 

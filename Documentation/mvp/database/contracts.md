@@ -25,10 +25,29 @@ Every published listing requires an asking price with currency, a district, a to
 
 ## Standard fields and flexible facts
 
-- Keep standard values in their dedicated columns on `property.listing_revisions`. Use the same revision's `standard_fact_evidence` object for optional source references, extra qualifiers, or uncertainty about a field. Key those entries by the standard field name and keep the typed value in its column. Property service validates the keys and evidence.
+- Road width (`access_road_width`) and flexible facts use the versioned fact model. Keep price, location, land and floor area, room counts, and the other dedicated fields on `property.listing_revisions`. Use `standard_fact_evidence` for the fields still stored on that revision. Public search continues to read the published revision. Phone numbers, written addresses and exact coordinates use the private disclosure model.
 - For land area, floor area, and access-road width, record the seller's stated precision. Use `true` for an estimate, `false` for a value the seller explicitly supplies as a measurement, and `NULL` when the seller leaves precision unspecified. Leave the value, unit, and flag `NULL` when the measurement is missing. If precision matters and the seller's wording is unclear, ask them. A seller-reported measurement retains its attribution.
-- Use `fact_definitions`, `fact_applicability`, and `revision_facts` for flexible facts. Property service checks that the fact applies to the listing's type. The database checks that a known answer matches its declared value type.
-- The backend maps standard question keys to their listing columns. A standard question can use the same inquiry grouping and **Share answer** workflow as a flexible question.
+- Register each versioned key and its value type in `property.fact_definitions` and its eligible property types in `property.fact_applicability` before accepting inquiries. Property checks applicability. One immutable `property.fact_versions` row stores one listing's value, unit, precision and source for that key. Allocate its version number under the listing lock. A new version may exist privately while a seller reviews a proposal. Known values match their declared type. Unknown and disputed versions carry no confirmed value.
+- Each saved revision selects its versions in `property.revision_facts`. Carry forward the previous revision's fact links, evidence approvals and photo attachments when saving an edit. At publication review, apply page approval to the exact versions the seller includes. Preserve the exact approved version on earlier revisions.
+- **Save draft** advances `listings.current_draft_revision_id`. **Save and generate showcase** first saves the edits and submits a job for that exact revision. A failed generation leaves the saved draft available. After a change, suggest **Regenerate showcase** in the editor. Publication pairs a revision only with a showcase generated from it.
+
+## Which value a buyer sees
+
+For a versioned fact in Property Chat, read `property.buyer_visible_facts` by `(listing_id, fact_key)` and join its `fact_version_id` to `property.fact_versions.id`. An absent pointer or an unknown or disputed version leads to the missing-information flow. A page read follows the live publication to its revision and reads that revision's public-approved fact links. Dedicated listing fields come from the published revision.
+
+After checking the buyer's access to the listing, Property resolves one ordinary chat fact with this query. Bind the listing ID to `$1` and the registered fact key to `$2`.
+
+```sql
+SELECT f.value_kind, f.evidence_state, f.number_value, f.boolean_value,
+       f.text_value, f.unit, f.approximate, f.source_kind, f.qualifier, f.certainty
+FROM property.buyer_visible_facts AS b
+JOIN property.fact_versions AS f ON f.id = b.fact_version_id
+WHERE b.listing_id = $1 AND b.fact_key = $2;
+```
+
+- **Save draft** changes only the editor's revision. **Share answer** sets the buyer-visible pointer for the one approved key.
+- **Publish** locks the listing and compares the public-approved fact links on the outgoing and incoming published revisions. Insert or update pointers for newly public or changed versions. On the first publication, insert the public-approved facts. For a removed public fact, delete its pointer if it still points to the removed version. Preserve independently shared answers to other versions. Leave all other keys alone, including chat-only keys. Commit these changes with the publication and current-publication pointer. A replay returns the original result.
+- Maya publishes road width at 15 ft, shares 14 ft, and privately saves 13 ft. The page shows 15 ft, Property Chat answers 14 ft, and the editor opens at 13 ft. Publishing the 13-foot revision and its matching showcase changes both buyer reads to 13 ft. An earlier message delivering 14 ft retains its wording.
 
 ## Showcase photos
 
@@ -40,8 +59,10 @@ Every published listing requires an asking price with currency, a district, a to
 
 - Create an inquiry after the buyer confirms the request. Group equivalent pending inquiries by listing and canonical fact key. Keep each inquiry linked to its original Property Chat.
 - The seller can answer from the inbox or Seller Chat. Both use the same listing-scoped question and **Share answer** operation. Persist the exact proposed wording so it survives refresh and can be reviewed before sharing. Repeating the same action must return the same result.
-- On **Share answer**, save the shared version, mark the group answered, set the current answer, and deliver that version to the original requesting chats in one Engagement transaction. Future questions in Property Chat use the current answer for that listing. A public listing update requires a separate seller action.
-- When a seller shares a correction, retain both versions and move the current-answer pointer to the correction. Preserve earlier chat messages. Answer anyone who asks again using the latest shared version, including a buyer who received the previous answer.
+- A proposal records its exact wording, the immutable `fact_version_id`, and the draft revision Maya reviewed. Preparing it grants no buyer access. Reuse the existing fact version when its value, source and qualifiers already match.
+- **Share answer** is one seller action and one PostgreSQL transaction. Engagement coordinates a narrow Property-owned database operation on the same connection to validate ownership, lock the listing and apply the fact. Check for a completed replay under the lock first. Compare the reviewed draft's link for this key with the latest draft's link. Preserve unrelated edits. If this key changed to a different version in the meantime, show the conflict for review before committing. If the latest draft already uses the proposed version, reuse the revision. Otherwise save a new revision from the latest draft, replacing only this key and advancing the editor pointer.
+- In that transaction set the buyer-visible pointer, insert the shared answer with its stable share action ID, and move `engagement.current_answers` to the approved chat wording. For a pending group also record its resolution, mark it answered and deliver to its original chats. Roll back all writes on failure. A replay returns the original outcome without moving later pointers. Limit the coordinating role to the required Property operation and Engagement writes.
+- A correction can originate in Seller Chat without a pending group. Use the same operation, link the superseded answer and retain the original deliveries. Declining a request records its resolution and status delivery without a fact update. Sharing an ordinary answer makes that fact available for future questions about the listing. Only explicit publication changes the public page.
 
 ## Private disclosures
 

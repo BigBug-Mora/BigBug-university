@@ -8,7 +8,7 @@ Run the Next.js, React, TypeScript, and Tailwind application. The Next.js server
 
 | Area | User actions and states |
 | --- | --- |
-| Seller | Create and edit a draft for a house, land, or apartment. Upload photos. See inspection suggestions, choose whether to act on them, edit a showcase, and explicitly publish. |
+| Seller | Create and edit a draft for a house, land, or apartment. Upload photos and review optional inspection suggestions. Use Save draft for a private save or Save and generate showcase to generate from that saved revision. Offer Regenerate showcase in the editor after facts change. Preview, edit and explicitly publish the matching revision and showcase. |
 | Seller inbox | View a current summary grouped by property and underlying missing fact. Review, approve, decline, or leave an item pending. Handle phone and location requests independently. |
 | Buyer | Search in natural language, browse published results, open a listing, and enter its Property Chat. Back to Search restores the previous query and results. |
 | Private details | Use the same request actions on the property page and in chat. In the dedicated result, show pending or declined status, the current values the seller has shared, or an unavailable state for a removed detail. In the seller editor, explain that editing a shared detail updates it for existing recipients. Removing the detail ends access through that detail ID. |

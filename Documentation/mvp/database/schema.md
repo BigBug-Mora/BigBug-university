@@ -111,9 +111,6 @@ CREATE TABLE property.listing_revisions (
     parking_spaces           smallint CHECK (parking_spaces >= 0),
     covered_parking_spaces   smallint CHECK (covered_parking_spaces >= 0),
     vehicle_access           boolean,
-    access_road_width        numeric(10,3) CHECK (access_road_width > 0),
-    access_road_width_unit   varchar(4),
-    access_road_width_approximate boolean,
     construction_status      varchar(24),
     year_built               smallint CHECK (year_built > 0),
     furnishing_status        varchar(24),
@@ -161,9 +158,6 @@ CREATE TABLE property.listing_revisions (
     CHECK (land_area IS NOT NULL OR land_area_approximate IS NULL),
     CHECK (floor_area IS NOT NULL OR floor_area_approximate IS NULL),
     CHECK (floor_area_unit IS NULL OR floor_area_unit IN ('sq_ft', 'sq_m')),
-    CHECK ((access_road_width IS NULL) = (access_road_width_unit IS NULL)),
-    CHECK (access_road_width_unit IS NULL OR access_road_width_unit IN ('ft', 'm')),
-    CHECK (access_road_width IS NOT NULL OR access_road_width_approximate IS NULL),
     CHECK (attached_bathroom_count <= bathroom_count),
     CHECK (ground_floor_bedrooms <= bedroom_count),
     CHECK (covered_parking_spaces <= parking_spaces),
@@ -187,13 +181,13 @@ ALTER TABLE property.listings
     REFERENCES property.listing_revisions(listing_id, id);
 
 -- ============================================================
--- 3. FLEXIBLE FACTS AND EVIDENCE
--- These tables describe flexible facts and store their values and evidence.
--- Standard fields and their evidence stay on listing_revisions.
+-- 3. VERSIONED PROPERTY FACTS
+-- Road width and flexible facts share this catalog and typed storage.
+-- Other dedicated listing columns retain their existing checks and evidence.
 -- ============================================================
 
 CREATE TABLE property.fact_definitions (
-    fact_key        text PRIMARY KEY,
+    fact_key        text PRIMARY KEY CHECK (btrim(fact_key) <> ''),
     display_name    text NOT NULL,
     value_kind      varchar(12) NOT NULL,
     canonical_unit  text,
@@ -210,9 +204,19 @@ CREATE TABLE property.fact_applicability (
     CHECK (property_type IN ('house', 'apartment', 'land'))
 );
 
-CREATE TABLE property.revision_facts (
-    revision_id          uuid NOT NULL REFERENCES property.listing_revisions(id),
+INSERT INTO property.fact_definitions (fact_key, display_name, value_kind)
+VALUES ('access_road_width', 'Access road width', 'number');
+
+INSERT INTO property.fact_applicability (fact_key, property_type)
+VALUES ('access_road_width', 'house'), ('access_road_width', 'apartment'),
+       ('access_road_width', 'land');
+
+-- Immutable value and evidence. Approval and publication select versions.
+CREATE TABLE property.fact_versions (
+    id                   uuid PRIMARY KEY,
+    listing_id           uuid NOT NULL REFERENCES property.listings(id),
     fact_key             text NOT NULL,
+    version_no           bigint NOT NULL CHECK (version_no > 0),
     value_kind           varchar(12) NOT NULL,
     evidence_state       varchar(12) NOT NULL,
     number_value         numeric,
@@ -220,20 +224,23 @@ CREATE TABLE property.revision_facts (
     text_value           text,
     source_kind          text NOT NULL,
     source_account_id    uuid,
-    source_answer_id     uuid,
+    unit                 text,
+    approximate          boolean,
     qualifier            text,
     certainty            text,
-    approved_for_public  boolean NOT NULL DEFAULT false,
-    approved_by          uuid,
-    approved_at          timestamptz,
+    created_at           timestamptz NOT NULL DEFAULT now(),
 
-    PRIMARY KEY (revision_id, fact_key),
+    UNIQUE (listing_id, fact_key, version_no),
+    UNIQUE (listing_id, fact_key, id),
     FOREIGN KEY (fact_key, value_kind)
         REFERENCES property.fact_definitions(fact_key, value_kind),
 
     CHECK (evidence_state IN ('known', 'unknown', 'disputed')),
-    CHECK ((approved_by IS NULL) = (approved_at IS NULL)),
-    CHECK (NOT approved_for_public OR approved_by IS NOT NULL),
+    CHECK (number_value IS NOT NULL OR (unit IS NULL AND approximate IS NULL)),
+    CHECK (fact_key <> 'access_road_width' OR evidence_state <> 'known' OR
+           (number_value IS NOT NULL AND number_value > 0 AND number_value < 10000000
+            AND number_value = round(number_value, 3)
+            AND unit IS NOT NULL AND unit IN ('ft', 'm'))),
     CHECK (
         CASE
             WHEN evidence_state <> 'known'
@@ -248,6 +255,35 @@ CREATE TABLE property.revision_facts (
                     AND number_value IS NULL AND boolean_value IS NULL
         END
     )
+);
+
+-- Each revision selects its own immutable versions and page approvals.
+CREATE TABLE property.revision_facts (
+    listing_id           uuid NOT NULL,
+    revision_id          uuid NOT NULL,
+    fact_key             text NOT NULL,
+    fact_version_id      uuid NOT NULL,
+    approved_for_public  boolean NOT NULL DEFAULT false,
+    approved_by          uuid,
+    approved_at          timestamptz,
+
+    PRIMARY KEY (revision_id, fact_key),
+    FOREIGN KEY (listing_id, revision_id)
+        REFERENCES property.listing_revisions(listing_id, id),
+    FOREIGN KEY (listing_id, fact_key, fact_version_id)
+        REFERENCES property.fact_versions(listing_id, fact_key, id),
+    CHECK ((approved_by IS NULL) = (approved_at IS NULL)),
+    CHECK (NOT approved_for_public OR approved_by IS NOT NULL)
+);
+
+-- Current ordinary Property Chat facts. Publish and Share answer write here.
+CREATE TABLE property.buyer_visible_facts (
+    listing_id       uuid NOT NULL,
+    fact_key         text NOT NULL,
+    fact_version_id  uuid NOT NULL,
+    PRIMARY KEY (listing_id, fact_key),
+    FOREIGN KEY (listing_id, fact_key, fact_version_id)
+        REFERENCES property.fact_versions(listing_id, fact_key, id)
 );
 
 -- ============================================================
@@ -521,7 +557,7 @@ CREATE TABLE engagement.messages (
 CREATE TABLE engagement.inquiry_groups (
     id            uuid PRIMARY KEY,
     listing_id    uuid NOT NULL,
-    fact_key      text NOT NULL CHECK (btrim(fact_key) <> ''),
+    fact_key      text NOT NULL REFERENCES property.fact_definitions(fact_key),
     status        varchar(12) NOT NULL DEFAULT 'pending',
     opened_at     timestamptz NOT NULL DEFAULT now(),
 
@@ -564,11 +600,15 @@ CREATE TABLE engagement.answer_proposals (
     seller_source_message_id  uuid REFERENCES engagement.messages(id),
     share_card_message_id     uuid UNIQUE REFERENCES engagement.messages(id),
     wording                   text NOT NULL CHECK (btrim(wording) <> ''),
-    structured_value          jsonb NOT NULL,
-    qualifier                 text,
+    fact_version_id           uuid NOT NULL,
+    reviewed_revision_id      uuid NOT NULL,
     created_at                timestamptz NOT NULL DEFAULT now(),
 
     UNIQUE (listing_id, fact_key, id),
+    FOREIGN KEY (listing_id, reviewed_revision_id)
+        REFERENCES property.listing_revisions(listing_id, id),
+    FOREIGN KEY (listing_id, fact_key, fact_version_id)
+        REFERENCES property.fact_versions(listing_id, fact_key, id),
     FOREIGN KEY (listing_id, fact_key, group_id)
         REFERENCES engagement.inquiry_groups(listing_id, fact_key, id)
 );
@@ -640,11 +680,11 @@ CREATE TABLE engagement.inquiry_deliveries (
         REFERENCES engagement.messages(conversation_id, id)
 );
 
--- First share: resolve the pending group, deliver to its original chats,
--- and set current_answers in one transaction.
--- Correction: create a new shared_answers row and replace current_answers.
--- Earlier messages keep their previous wording. No correction fan-out.
--- A fresh question, including one in an old chat, reads current_answers.
+-- Share answer commits draft linkage, buyer visibility, approval and delivery
+-- together under the listing lock. See contracts.md for replay and conflicts.
+-- current_answers identifies the latest shared wording for the fact.
+-- New buyer questions read buyer_visible_facts. Earlier deliveries keep
+-- their exact approved wording through resolution -> answer -> proposal.
 
 -- ============================================================
 -- 9. BUYER-SPECIFIC PRIVATE DISCLOSURES
