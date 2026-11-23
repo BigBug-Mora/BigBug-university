@@ -23,6 +23,13 @@ Every published listing requires an asking price with currency, a district, a to
 - A land seller can enter a total price or a price per area unit. Preserve the entered amount and unit. For budget search, convert the land area to the pricing unit and multiply by the entered price. Label the resulting total as approximate if it was calculated from an approximate land area.
 - Draft edits create new revisions. Existing public listings keep their published revisions until the seller explicitly publishes an update. Commit the publication and its current pointer together. Accept only verified photos for revision attachments. Serialize changes to current phone numbers with publication and preserve at least one current phone number on a live listing.
 
+## Standard fields and flexible facts
+
+- Keep standard values in their dedicated columns on `property.listing_revisions`. Use the same revision's `standard_fact_evidence` object for optional source references, extra qualifiers, or uncertainty about a field. Key those entries by the standard field name and keep the typed value in its column. Property service validates the keys and evidence.
+- For land area, floor area, and access-road width, record the seller's stated precision. Use `true` for an estimate, `false` for a value the seller explicitly supplies as a measurement, and `NULL` when the seller leaves precision unspecified. Leave the value, unit, and flag `NULL` when the measurement is missing. If precision matters and the seller's wording is unclear, ask them. A seller-reported measurement retains its attribution.
+- Use `fact_definitions`, `fact_applicability`, and `revision_facts` for flexible facts. Property service checks that the fact applies to the listing's type. The database checks that a known answer matches its declared value type.
+- The backend maps standard question keys to their listing columns. A standard question can use the same inquiry grouping and **Share answer** workflow as a flexible question.
+
 ## Ordinary seller questions and answers
 
 - Create an inquiry after the buyer confirms the request. Group equivalent pending inquiries by listing and canonical fact key. Keep each inquiry linked to its original Property Chat.

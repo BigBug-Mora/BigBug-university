@@ -113,6 +113,7 @@ CREATE TABLE property.listing_revisions (
     vehicle_access           boolean,
     access_road_width        numeric(10,3) CHECK (access_road_width > 0),
     access_road_width_unit   varchar(4),
+    access_road_width_approximate boolean,
     construction_status      varchar(24),
     year_built               smallint CHECK (year_built > 0),
     furnishing_status        varchar(24),
@@ -121,6 +122,11 @@ CREATE TABLE property.listing_revisions (
     has_electricity          boolean,
     has_garden               boolean,
     has_boundary_wall        boolean,
+
+    -- Optional evidence keyed by standard field, such as a seller answer ID
+    -- or a qualifier. Measurement values and approximation flags stay above.
+    standard_fact_evidence   jsonb NOT NULL DEFAULT '{}'
+                             CHECK (jsonb_typeof(standard_fact_evidence) = 'object'),
 
     UNIQUE (listing_id, id),
     UNIQUE (listing_id, revision_no),
@@ -157,6 +163,7 @@ CREATE TABLE property.listing_revisions (
     CHECK (floor_area_unit IS NULL OR floor_area_unit IN ('sq_ft', 'sq_m')),
     CHECK ((access_road_width IS NULL) = (access_road_width_unit IS NULL)),
     CHECK (access_road_width_unit IS NULL OR access_road_width_unit IN ('ft', 'm')),
+    CHECK (access_road_width IS NOT NULL OR access_road_width_approximate IS NULL),
     CHECK (attached_bathroom_count <= bathroom_count),
     CHECK (ground_floor_bedrooms <= bedroom_count),
     CHECK (covered_parking_spaces <= parking_spaces),
@@ -181,19 +188,17 @@ ALTER TABLE property.listings
 
 -- ============================================================
 -- 3. FLEXIBLE FACTS AND EVIDENCE
--- Standard fields retain their typed values on listing_revisions.
--- Extra facts use typed values here. Both can retain provenance.
+-- These tables describe flexible facts and store their values and evidence.
+-- Standard fields and their evidence stay on listing_revisions.
 -- ============================================================
 
 CREATE TABLE property.fact_definitions (
     fact_key        text PRIMARY KEY,
     display_name    text NOT NULL,
-    storage_kind    varchar(12) NOT NULL,
     value_kind      varchar(12) NOT NULL,
     canonical_unit  text,
 
-    UNIQUE (fact_key, storage_kind, value_kind),
-    CHECK (storage_kind IN ('column', 'flexible')),
+    UNIQUE (fact_key, value_kind),
     CHECK (value_kind IN ('number', 'boolean', 'text'))
 );
 
@@ -208,7 +213,6 @@ CREATE TABLE property.fact_applicability (
 CREATE TABLE property.revision_facts (
     revision_id          uuid NOT NULL REFERENCES property.listing_revisions(id),
     fact_key             text NOT NULL,
-    storage_kind         varchar(12) NOT NULL,
     value_kind           varchar(12) NOT NULL,
     evidence_state       varchar(12) NOT NULL,
     number_value         numeric,
@@ -224,15 +228,15 @@ CREATE TABLE property.revision_facts (
     approved_at          timestamptz,
 
     PRIMARY KEY (revision_id, fact_key),
-    FOREIGN KEY (fact_key, storage_kind, value_kind)
-        REFERENCES property.fact_definitions(fact_key, storage_kind, value_kind),
+    FOREIGN KEY (fact_key, value_kind)
+        REFERENCES property.fact_definitions(fact_key, value_kind),
 
     CHECK (evidence_state IN ('known', 'unknown', 'disputed')),
     CHECK ((approved_by IS NULL) = (approved_at IS NULL)),
     CHECK (NOT approved_for_public OR approved_by IS NOT NULL),
     CHECK (
         CASE
-            WHEN storage_kind = 'column' OR evidence_state <> 'known'
+            WHEN evidence_state <> 'known'
                 THEN num_nonnulls(number_value, boolean_value, text_value) = 0
             WHEN value_kind = 'number'
                 THEN number_value IS NOT NULL
