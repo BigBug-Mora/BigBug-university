@@ -328,14 +328,28 @@ CREATE TABLE property.showcase_photos (
         REFERENCES property.revision_photos(revision_id, photo_id)
 );
 
+-- Featured photos form a separately ordered story drawn from the gallery.
+CREATE TABLE property.showcase_featured_photos (
+    showcase_id    uuid NOT NULL,
+    photo_id       uuid NOT NULL,
+    feature_order  smallint NOT NULL CHECK (feature_order BETWEEN 1 AND 3),
+    title          text NOT NULL CHECK (btrim(title) <> ''),
+    body           text NOT NULL CHECK (btrim(body) <> ''),
+
+    PRIMARY KEY (showcase_id, feature_order),
+    UNIQUE (showcase_id, photo_id),
+    FOREIGN KEY (showcase_id, photo_id)
+        REFERENCES property.showcase_photos(showcase_id, photo_id)
+);
+
 ALTER TABLE property.listings
     ADD FOREIGN KEY (id, current_showcase_id)
     REFERENCES property.showcase_revisions(listing_id, id);
 
 -- ============================================================
 -- 5. PRIVATE PHONE NUMBERS, WRITTEN ADDRESS, AND GPS PIN
--- A replacement creates a new value-version ID. Existing grants
--- continue to identify exactly what the seller previously shared.
+-- One row holds the current encrypted value. Grants follow its stable ID.
+-- Removal clears the value and retires the ID permanently.
 -- ============================================================
 
 CREATE TABLE property.private_details (
@@ -343,34 +357,31 @@ CREATE TABLE property.private_details (
     listing_id          uuid NOT NULL REFERENCES property.listings(id),
     detail_kind         varchar(20) NOT NULL,
     slot_no             smallint NOT NULL,
-    current_version_id  uuid,
+    encrypted_value     bytea,
+    encryption_key_ref  text,
+    updated_at          timestamptz NOT NULL DEFAULT now(),
+    retired_at          timestamptz,
 
-    UNIQUE (listing_id, detail_kind, slot_no),
+    active_slot boolean GENERATED ALWAYS AS (
+        CASE WHEN retired_at IS NULL THEN true END
+    ) STORED,
+
+    UNIQUE (listing_id, detail_kind, slot_no, active_slot),
     CHECK (
         (detail_kind = 'phone' AND slot_no BETWEEN 1 AND 3)
         OR (detail_kind IN ('written_address', 'map_pin') AND slot_no = 1)
+    ),
+    CHECK (
+        (retired_at IS NULL
+            AND encrypted_value IS NOT NULL
+            AND octet_length(encrypted_value) > 0
+            AND encryption_key_ref IS NOT NULL
+            AND btrim(encryption_key_ref) <> '')
+        OR (retired_at IS NOT NULL
+            AND encrypted_value IS NULL
+            AND encryption_key_ref IS NULL)
     )
 );
-
-CREATE TABLE property.private_detail_versions (
-    id                  uuid PRIMARY KEY,
-    detail_id           uuid NOT NULL REFERENCES property.private_details(id),
-    version_no          integer NOT NULL CHECK (version_no > 0),
-    action_id           uuid NOT NULL,
-    encrypted_value     bytea NOT NULL,
-    encryption_key_ref  text NOT NULL,
-    created_by          uuid NOT NULL,
-    created_at          timestamptz NOT NULL DEFAULT now(),
-
-    UNIQUE (detail_id, id),
-    UNIQUE (detail_id, version_no),
-    UNIQUE (detail_id, action_id),
-    CHECK (octet_length(encrypted_value) > 0)
-);
-
-ALTER TABLE property.private_details
-    ADD FOREIGN KEY (id, current_version_id)
-    REFERENCES property.private_detail_versions(detail_id, id);
 
 -- ============================================================
 -- 6. PUBLICATION AND PUBLIC SEARCH
@@ -401,8 +412,8 @@ CREATE TABLE property.current_publications (
         REFERENCES property.publications(listing_id, id)
 );
 
--- Property service locks the listing during publication and phone removal.
--- All types require district, town, currency, price, and 1-3 current phones.
+-- Property service locks the listing for publication and phone changes.
+-- All types require district, town, currency, price, and 1-3 distinct active phones.
 -- House: land area, bedroom count, bathroom count required.
 -- Apartment: unit floor area required; land area optional on every floor.
 -- Land: land area required. Validate the total price can be calculated.
@@ -637,7 +648,7 @@ CREATE TABLE engagement.inquiry_deliveries (
 
 -- ============================================================
 -- 9. BUYER-SPECIFIC PRIVATE DISCLOSURES
--- A phone request can grant one or more selected phone versions.
+-- A phone request can grant one or more selected phone detail IDs.
 -- An exact-location request can grant the address, map pin, or both.
 -- ============================================================
 
@@ -677,13 +688,13 @@ CREATE TABLE engagement.disclosure_decisions (
 );
 
 CREATE TABLE engagement.disclosure_grants (
-    decision_id       uuid NOT NULL,
-    outcome           varchar(12) NOT NULL DEFAULT 'granted',
-    request_kind      varchar(20) NOT NULL,
-    detail_kind       varchar(20) NOT NULL,
-    value_version_id  uuid NOT NULL,
+    decision_id        uuid NOT NULL,
+    outcome            varchar(12) NOT NULL DEFAULT 'granted',
+    request_kind       varchar(20) NOT NULL,
+    detail_kind        varchar(20) NOT NULL,
+    private_detail_id  uuid NOT NULL,  -- Property API reference
 
-    PRIMARY KEY (decision_id, value_version_id),
+    PRIMARY KEY (decision_id, private_detail_id),
     FOREIGN KEY (decision_id, outcome, request_kind)
         REFERENCES engagement.disclosure_decisions(id, outcome, request_kind),
     CHECK (outcome = 'granted'),
@@ -695,10 +706,12 @@ CREATE TABLE engagement.disclosure_grants (
     )
 );
 
--- On grant: verify listing ownership and exact version IDs through Property.
--- Commit the decision, at least one chosen version, and request status together.
--- On read: verify the requesting buyer, listing, and grant; fetch that
--- immutable version. Never substitute the latest phone/address/pin.
+-- On grant: verify ownership and each selected detail's listing, kind, and
+-- active state through Property. Commit the decision, grants, and status together.
+-- On read: verify the buyer and grant, then fetch only the current value of
+-- each granted detail ID. Property checks the listing, kind, and active state.
+-- On edit: keep the detail ID. On removal: clear its value and retire the ID
+-- permanently. A later detail in the same slot must receive a new ID.
 
 -- ============================================================
 -- 10. AGENT RUNS AND BACKGROUND JOBS

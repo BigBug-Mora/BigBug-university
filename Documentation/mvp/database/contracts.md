@@ -5,7 +5,7 @@ These contracts define the behavior supported by the [PostgreSQL schema](schema.
 ## Ownership and authorization
 
 - Cognito owns credentials. The account module maps a verified Cognito issuer and subject to an EstateFlow account and stores its profile. An account can act as a buyer or seller based on its relationship to the resource.
-- Property owns listings, listing revisions, facts, photo references, showcases, publications, and private value versions. Engagement owns conversations, inquiries, seller answers, and buyer-specific disclosure grants. Agent owns runs, background jobs, dispatch records, worker claims, and results.
+- Property owns listings, listing revisions, facts, photo references, showcases, publications, and current private details. Engagement owns conversations, inquiries, seller answers, and buyer-specific disclosure grants. Agent owns runs, background jobs, dispatch records, worker claims, and results.
 - Derive the acting account from verified authentication. Enforce listing ownership, conversation membership, and disclosure permissions at the owning API. Resolve cross-service IDs through that API. Scope runtime database roles to service responsibilities.
 
 ## Listing revisions and publication
@@ -21,7 +21,7 @@ Every published listing requires an asking price with currency, a district, a to
 - Land area and floor area are separate measurements. When an optional measurement is supplied, save the value and unit together. Leave optional fields `NULL` when unknown. Preserve explicit zero and false values and record the source and qualifiers of seller-supplied facts.
 - The MVP supports House, Apartment, and Land. A standalone villa can use House and be described as a villa in its headline.
 - A land seller can enter a total price or a price per area unit. Preserve the entered amount and unit. For budget search, convert the land area to the pricing unit and multiply by the entered price. Label the resulting total as approximate if it was calculated from an approximate land area.
-- Draft edits create new revisions. Existing public listings keep their published revisions until the seller explicitly publishes an update. Commit the publication and its current pointer together. Accept only verified photos for revision attachments. Serialize changes to current phone numbers with publication and preserve at least one current phone number on a live listing.
+- Draft edits create new revisions. Existing public listings keep their published revisions until the seller explicitly publishes an update. Commit the publication and its current pointer together. Accept only verified photos for revision attachments. Serialize changes to phone details with publication, keep active numbers distinct, and preserve at least one active phone number on a live listing.
 
 ## Standard fields and flexible facts
 
@@ -29,6 +29,12 @@ Every published listing requires an asking price with currency, a district, a to
 - For land area, floor area, and access-road width, record the seller's stated precision. Use `true` for an estimate, `false` for a value the seller explicitly supplies as a measurement, and `NULL` when the seller leaves precision unspecified. Leave the value, unit, and flag `NULL` when the measurement is missing. If precision matters and the seller's wording is unclear, ask them. A seller-reported measurement retains its attribution.
 - Use `fact_definitions`, `fact_applicability`, and `revision_facts` for flexible facts. Property service checks that the fact applies to the listing's type. The database checks that a known answer matches its declared value type.
 - The backend maps standard question keys to their listing columns. A standard question can use the same inquiry grouping and **Share answer** workflow as a flexible question.
+
+## Showcase photos
+
+- `revision_photos` records which verified photos belong to the source listing revision and their draft order. `showcase_photos` records the full gallery for one showcase, its display order, and optional captions. Use the first photo in gallery order as the cover.
+- `showcase_featured_photos` records up to three distinct gallery photos in a separate story order. Each feature has a title and a one- or two-sentence write-up grounded in the photo or approved property facts. Featured photos also appear in the full gallery at the bottom of the detail page.
+- Save the showcase revision, gallery, and featured story together. The database checks that featured photos belong to that showcase's gallery. Property service validates the text and returns the gallery and featured story from the exact published showcase. Fewer usable photos may produce fewer featured write-ups.
 
 ## Ordinary seller questions and answers
 
@@ -40,9 +46,10 @@ Every published listing requires an asking price with currency, a district, a to
 ## Private disclosures
 
 - District and town are public. Each listing phone number, written address, and GPS pin is private. The written address and the GPS pin are independently optional. A pin contains latitude and longitude together.
-- A phone request and an exact-location request are separate. For a particular buyer and listing, the seller selects which phone numbers, written address, or pin to share. A grant records each exact value version selected.
-- A replacement gets a new version ID and requires fresh permission. Earlier grants cover the versions originally shared. The read path verifies the buyer, listing, and granted version before returning the protected value through its dedicated result. Chat can show status or a result reference.
-- Check ownership and the selected version IDs before granting access. Commit the seller decision, the selected grants, and the request status together. Keep private values out of ordinary transcripts, model inputs, public projections, and broker messages.
+- Phone and exact-location requests are separate. The seller can share one or more selected phone numbers, or the written address, map pin, or both, with the requesting buyer. Each grant records the selected detail's stable ID.
+- Property keeps one current encrypted value per detail. Editing a phone number, address, or pin updates that value in place. Buyers who already have access see the updated value the next time they open the protected result. Edits to private details take effect independently of listing publication.
+- Removing a detail clears its value and retires its ID permanently. Keep the retired record and existing grants as history. A buyer's result shows a removed detail as unavailable. A detail added later in the same slot gets a new ID and requires its own grant. A detail ID stays bound to its original listing and kind.
+- Check seller ownership and each selected detail's listing, kind, and active state before granting access. Commit the seller decision, the selected grants, and the request status together. On each protected read, check the signed-in buyer and grant, then resolve only the granted IDs against that listing and kind. Chat can show status or a result reference. Keep private values out of ordinary transcripts, model inputs, public projections, and broker messages.
 
 ## Background jobs and hosted cutover
 

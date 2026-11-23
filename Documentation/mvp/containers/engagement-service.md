@@ -18,10 +18,12 @@ Enforce one pending group per property and canonical fact in the database. Handl
 
 ## Protected disclosures
 
-Track phone number and exact location as separate request types. A grant applies to one buyer, one listing, and one detail. A seller can leave a request pending or decline it, and an issued MVP grant remains in force. Check the grant on the dedicated result read. Keep protected values out of chat transcripts and agent context. The chat can show a status or a link to the result.
+Track phone number and exact location as separate request types. A seller can grant access to selected phone numbers, the written address, or the map pin for the requesting buyer and listing. Store one grant per selected detail ID. Verify each selection through Property service before granting access. A seller can also leave the request pending or decline it.
+
+On every protected result read, verify the buyer and resolve only the granted detail IDs through Property service. Return the current value of each active detail. Show retired details as unavailable. The chat can show status or a link to the result, and protected values stay in the dedicated result.
 
 ## Interactions and verification
 
 The [Frontend](frontend.md) reads saved chats and the inbox. The [Agent API](agent-api/agent-api.md) reads authorized history and facts, persists interaction results, and uses this service for confirmations and seller decisions. The [Property service](property-service.md) owns the public listing and enforces publication independently of publishing an answer to a conversation.
 
-Test concurrent grouping, decline and resubmission, reply deduplication, authorization for each original conversation, independent phone and location grants, and transcript retrieval after refresh. Finalize normal-answer visibility options, the reference and authorization flow for private values, and the durable delivery mechanism for approved answers and statuses.
+Test concurrent grouping, decline and resubmission, reply deduplication, authorization for each original conversation, independent phone and location grants, edits to shared details, retirement and reuse of a slot, and transcript retrieval after refresh. Finalize normal-answer visibility options and the durable delivery mechanism for approved answers and statuses.

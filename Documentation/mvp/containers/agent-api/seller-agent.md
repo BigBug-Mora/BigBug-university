@@ -13,7 +13,7 @@ Request a [Property Inspector](../agent-worker/property-inspector-agent.md) job 
 1. Use [Engagement service](../engagement-service.md) to show the current grouped summary. Preserve property and inquiry scope. Each group can include several buyers who asked about the same underlying fact.
 2. Interpret the seller's response as a proposed answer. Preserve qualifiers and ask for clarification when a response is ambiguous. For example, confirm whether an approximate width refers to the access road or the main road.
 3. Show the proposed answer and visibility to the seller for explicit confirmation. The seller may answer, decline, or leave an item pending. Pass an authorized decision to Engagement service for durable storage and delivery to the original chats.
-4. Handle phone and exact-location requests as separate grant decisions. Surface the request type and buyer. The protected result is handled by the backend after explicit approval.
+4. Handle phone and exact-location requests separately. Show the request type and buyer, and let the seller select the specific details to share. Explain that the buyer can see later edits to those details. The backend serves the current values through the protected result.
 
 ## Verification
 
