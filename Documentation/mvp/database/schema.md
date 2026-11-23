@@ -159,8 +159,8 @@ CREATE TABLE property.listing_revisions (
     CHECK (floor_area IS NOT NULL OR floor_area_approximate IS NULL),
     CHECK (floor_area_unit IS NULL OR floor_area_unit IN ('sq_ft', 'sq_m')),
     CHECK (attached_bathroom_count <= bathroom_count),
-    CHECK (ground_floor_bedrooms <= bedroom_count),
     CHECK (covered_parking_spaces <= parking_spaces),
+    CHECK (ground_floor_bedrooms <= bedroom_count),
     CHECK (house_storey_count IS NULL OR property_type = 'house'),
     CHECK (apartment_floor_no IS NULL OR property_type = 'apartment'),
     CHECK (construction_status IS NULL OR construction_status IN
@@ -182,7 +182,7 @@ ALTER TABLE property.listings
 
 -- ============================================================
 -- 3. VERSIONED PROPERTY FACTS
--- Road width and flexible facts share this catalog and typed storage.
+-- One catalog identifies versioned facts and supported dedicated fields.
 -- Other dedicated listing columns retain their existing checks and evidence.
 -- ============================================================
 
@@ -191,8 +191,11 @@ CREATE TABLE property.fact_definitions (
     display_name    text NOT NULL,
     value_kind      varchar(12) NOT NULL,
     canonical_unit  text,
+    storage_kind    text NOT NULL DEFAULT 'versioned'
+                    CHECK (storage_kind IN ('versioned', 'dedicated')),
 
     UNIQUE (fact_key, value_kind),
+    UNIQUE (fact_key, storage_kind),
     CHECK (value_kind IN ('number', 'boolean', 'text'))
 );
 
@@ -207,9 +210,17 @@ CREATE TABLE property.fact_applicability (
 INSERT INTO property.fact_definitions (fact_key, display_name, value_kind)
 VALUES ('access_road_width', 'Access road width', 'number');
 
+-- Register dedicated fields together with their typed Property read/write mappings.
+INSERT INTO property.fact_definitions (fact_key, display_name, value_kind, storage_kind)
+VALUES ('covered_parking_spaces', 'Number of covered parking spaces', 'number', 'dedicated'),
+       ('bedroom_count', 'Number of bedrooms', 'number', 'dedicated');
+
 INSERT INTO property.fact_applicability (fact_key, property_type)
 VALUES ('access_road_width', 'house'), ('access_road_width', 'apartment'),
-       ('access_road_width', 'land');
+       ('access_road_width', 'land'),
+       ('covered_parking_spaces', 'house'), ('covered_parking_spaces', 'apartment'),
+       ('covered_parking_spaces', 'land'),
+       ('bedroom_count', 'house'), ('bedroom_count', 'apartment');
 
 -- Immutable value and evidence. Approval and publication select versions.
 CREATE TABLE property.fact_versions (
@@ -217,6 +228,7 @@ CREATE TABLE property.fact_versions (
     listing_id           uuid NOT NULL REFERENCES property.listings(id),
     fact_key             text NOT NULL,
     version_no           bigint NOT NULL CHECK (version_no > 0),
+    storage_kind         text GENERATED ALWAYS AS ('versioned'::text) STORED,
     value_kind           varchar(12) NOT NULL,
     evidence_state       varchar(12) NOT NULL,
     number_value         numeric,
@@ -231,6 +243,8 @@ CREATE TABLE property.fact_versions (
     created_at           timestamptz NOT NULL DEFAULT now(),
 
     UNIQUE (listing_id, fact_key, version_no),
+    FOREIGN KEY (fact_key, storage_kind)
+        REFERENCES property.fact_definitions(fact_key, storage_kind),
     UNIQUE (listing_id, fact_key, id),
     FOREIGN KEY (fact_key, value_kind)
         REFERENCES property.fact_definitions(fact_key, value_kind),
@@ -257,7 +271,7 @@ CREATE TABLE property.fact_versions (
     )
 );
 
--- Each revision selects its own immutable versions and page approvals.
+-- Freeze version links and page approvals when creating the revision.
 CREATE TABLE property.revision_facts (
     listing_id           uuid NOT NULL,
     revision_id          uuid NOT NULL,
@@ -280,8 +294,16 @@ CREATE TABLE property.revision_facts (
 CREATE TABLE property.buyer_visible_facts (
     listing_id       uuid NOT NULL,
     fact_key         text NOT NULL,
-    fact_version_id  uuid NOT NULL,
+    fact_version_id  uuid,
+    field_revision_id uuid,
+    storage_kind     text GENERATED ALWAYS AS
+                     (CASE WHEN field_revision_id IS NULL THEN 'versioned' ELSE 'dedicated' END) STORED,
     PRIMARY KEY (listing_id, fact_key),
+    CHECK (num_nonnulls(fact_version_id, field_revision_id) = 1),
+    FOREIGN KEY (fact_key, storage_kind)
+        REFERENCES property.fact_definitions(fact_key, storage_kind),
+    FOREIGN KEY (listing_id, field_revision_id)
+        REFERENCES property.listing_revisions(listing_id, id),
     FOREIGN KEY (listing_id, fact_key, fact_version_id)
         REFERENCES property.fact_versions(listing_id, fact_key, id)
 );
@@ -600,13 +622,20 @@ CREATE TABLE engagement.answer_proposals (
     seller_source_message_id  uuid REFERENCES engagement.messages(id),
     share_card_message_id     uuid UNIQUE REFERENCES engagement.messages(id),
     wording                   text NOT NULL CHECK (btrim(wording) <> ''),
-    fact_version_id           uuid NOT NULL,
+    fact_version_id           uuid,
+    proposed_field_value      jsonb,
+    storage_kind              text GENERATED ALWAYS AS
+                              (CASE WHEN fact_version_id IS NULL THEN 'dedicated' ELSE 'versioned' END) STORED,
     reviewed_revision_id      uuid NOT NULL,
     created_at                timestamptz NOT NULL DEFAULT now(),
 
     UNIQUE (listing_id, fact_key, id),
     FOREIGN KEY (listing_id, reviewed_revision_id)
         REFERENCES property.listing_revisions(listing_id, id),
+    CHECK (num_nonnulls(fact_version_id, proposed_field_value) = 1),
+    CHECK (jsonb_typeof(proposed_field_value) IN ('number', 'boolean', 'string')),
+    FOREIGN KEY (fact_key, storage_kind)
+        REFERENCES property.fact_definitions(fact_key, storage_kind),
     FOREIGN KEY (listing_id, fact_key, fact_version_id)
         REFERENCES property.fact_versions(listing_id, fact_key, id),
     FOREIGN KEY (listing_id, fact_key, group_id)
@@ -619,12 +648,15 @@ CREATE TABLE engagement.shared_answers (
     listing_id             uuid NOT NULL,
     fact_key               text NOT NULL,
     proposal_id            uuid NOT NULL UNIQUE,
+    applied_revision_id    uuid NOT NULL,
     supersedes_answer_id   uuid,
     shared_by_account_id   uuid NOT NULL REFERENCES account.accounts(id),
     share_action_id        uuid NOT NULL,
     shared_at              timestamptz NOT NULL DEFAULT now(),
 
     UNIQUE (shared_by_account_id, share_action_id),
+    FOREIGN KEY (listing_id, applied_revision_id)
+        REFERENCES property.listing_revisions(listing_id, id),
     UNIQUE (listing_id, fact_key, id),
     FOREIGN KEY (listing_id, fact_key, proposal_id)
         REFERENCES engagement.answer_proposals(listing_id, fact_key, id),

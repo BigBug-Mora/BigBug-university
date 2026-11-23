@@ -11,6 +11,8 @@ Run a Python FastAPI application with SQLAlchemy access to the property records 
 | Operation | Required behavior |
 | --- | --- |
 | Create or edit a draft | Check seller ownership. Support houses, land, and apartments. Preserve unknown fields, source, and qualifiers. Identify the revision used by specialist jobs. |
+| Select facts for the page | Save changes to page visibility as a new listing revision. Freeze its selected versions and approvals for preview and publication. |
+| Register and validate facts | Resolve agent-proposed definitions against existing fields and keys. Register new ordinary facts with their applicability. For supported dedicated keys use allowlisted, typed setters and field-only readers. Save the covered count in its existing revision column with its total-parking constraint. Return only the approved key's value and evidence from a shared revision. |
 | Upload or read photos | Authorize the action for a specific listing and object. Issue short-lived scoped access. Before attaching an upload, verify it belongs to the authorized draft and satisfies the agreed file rules. An incomplete upload must stay out of the listing gallery. |
 | Read a public listing or search | Return published records through the public projection. Apply structured filters and preserve unknown values. Private fields and draft-only materials stay out of public results. |
 | Read the property detail page | Return public facts from the published listing revision and the matching showcase's cover, featured photo story, and full gallery. Return featured photos in story order and gallery photos in display order. |
