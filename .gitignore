@@ -1,0 +1,59 @@
+# Local credentials and environment files
+.aws/
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.*.sample
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Infrastructure state, local inputs, and generated plans
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+cdk.out/
+
+# Python environments, build products, and test caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+
+# Next.js, Node.js, and browser test output
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+coverage/
+playwright-report/
+test-results/
+
+# Local runtime artifacts and editor files
+*.log
+compose.local.yaml
+compose.local.yml
+docker-compose.local.yaml
+docker-compose.local.yml
+.idea/
+.DS_Store
+Thumbs.db
