@@ -1,6 +1,6 @@
 # Agent Dispatcher Container
 
-[Container directory](containers.md) · [Agent API](agent-api/agent-api.md) · [RabbitMQ](rabbitmq.md) · [Agent worker](agent-worker/agent-worker.md)
+[Container directory](../containers.md) · [Agent API](../agent-api/agent-api.md) · [RabbitMQ](../rabbitmq/rabbitmq.md) · [Agent worker](../agent-worker/agent-worker.md)
 
 ## Runtime and responsibility
 

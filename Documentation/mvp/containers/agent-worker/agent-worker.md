@@ -15,8 +15,8 @@ Start with one `agent-worker` container per environment and configure Celery wit
 
 ## Job lifecycle
 
-1. Receive a job ID from [RabbitMQ](../rabbitmq.md). Load the durable job record and atomically claim it under the agreed concurrency policy. A completed job is safe to acknowledge after redelivery.
-2. Confirm the job scope and obtain revision-specific inputs through [Property service](../property-service.md). Use authorized S3 access for required photos. Reject or supersede jobs whose required inputs are unavailable or whose revisions cannot be used safely.
+1. Receive a job ID from [RabbitMQ](../rabbitmq/rabbitmq.md). Load the durable job record and atomically claim it under the agreed concurrency policy. A completed job is safe to acknowledge after redelivery.
+2. Confirm the job scope and obtain revision-specific inputs through [Property service](../property-service/property-service.md). Use authorized S3 access for required photos. Reject or supersede jobs whose required inputs are unavailable or whose revisions cannot be used safely.
 3. Run the LangGraph workflow and validate the result. Use a bounded model timeout and retry policy. Separate transient failures such as a provider timeout from invalid or permanently unavailable inputs.
 4. Save an inspection result against the inspected revision in durable workflow records. Send a validated showcase result to Property service as a draft with the job ID and input revision. Make resubmission safe if the property write succeeds but the worker stops before marking the job complete.
 5. Persist the final state and acknowledge the delivery under the chosen policy. If interrupted or redelivered, recover using the durable job state and its stable result identity. Preserve the last valid listing and showcase during failures.

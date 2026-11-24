@@ -1,6 +1,6 @@
 # RabbitMQ Container
 
-[Container directory](containers.md) · [Agent dispatcher](agent-dispatcher.md) · [Agent worker](agent-worker/agent-worker.md)
+[Container directory](../containers.md) · [Agent dispatcher](../agent-dispatcher/agent-dispatcher.md) · [Agent worker](../agent-worker/agent-worker.md)
 
 ## Runtime and responsibility
 

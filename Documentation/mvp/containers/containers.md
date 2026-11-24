@@ -6,13 +6,13 @@ Use this reference to implement and review the MVP layout with seven container r
 
 | Container | Job | Developer reference |
 | --- | --- | --- |
-| `frontend` | Serves the Next.js buyer and seller interface and calls the backend on behalf of the signed-in user. | [Frontend](frontend.md) |
-| `property-service` | Owns listing drafts, property facts, photo metadata, showcase revisions, publication, and search. | [Property service](property-service.md) |
-| `engagement-service` | Owns conversations, seller inquiries, approved answers, and access grants for private details. | [Engagement service](engagement-service.md) |
+| `frontend` | Serves the Next.js buyer and seller interface and calls the backend on behalf of the signed-in user. | [Frontend](frontend/frontend.md) |
+| `property-service` | Owns listing drafts, property facts, photo metadata, showcase revisions, publication, and search. | [Property service](property-service/property-service.md) |
+| `engagement-service` | Owns conversations, seller inquiries, approved answers, and access grants for private details. | [Engagement service](engagement-service/engagement-service.md) |
 | `agent-api` | Runs interactive Seller and Buyer Agent workflows and accepts requests for background AI jobs. | [Agent API](agent-api/agent-api.md) |
-| `agent-dispatcher` | Finds pending dispatch records in PostgreSQL and publishes job messages to RabbitMQ. | [Agent dispatcher](agent-dispatcher.md) |
+| `agent-dispatcher` | Finds pending dispatch records in PostgreSQL and publishes job messages to RabbitMQ. | [Agent dispatcher](agent-dispatcher/agent-dispatcher.md) |
 | `agent-worker` | Runs the Property Inspector and Property Showcase Creator workflows from queued jobs. | [Agent worker](agent-worker/agent-worker.md) |
-| `rabbitmq` | Queues background jobs and delivers them to Celery workers. | [RabbitMQ](rabbitmq.md) |
+| `rabbitmq` | Queues background jobs and delivers them to Celery workers. | [RabbitMQ](rabbitmq/rabbitmq.md) |
 
 `agent-api`, `agent-dispatcher`, and `agent-worker` use the same Python Docker image with separate startup commands. Agent API and the worker run the four agent workflows. Amazon RDS for PostgreSQL, Cognito, and S3 are shared managed AWS services. The direct Anthropic API is an external dependency.
 
@@ -57,5 +57,5 @@ For direct S3 uploads and downloads, the browser uses a URL authorized by Proper
 | Service and database access | Agree how internal calls authenticate and carry user context, where protected values are stored and returned, how PostgreSQL access is scoped by owner, and which tool and process apply shared migrations. |
 | Background delivery | Settle how local and hosted workers isolate jobs on shared AWS data. Define job claim recovery, retry limits, timeouts, and terminal failure behavior. |
 | API and UI contracts | Agree request and response schemas, chat delivery and refresh behavior for in-flight turns, job status updates, and the confirmation and error states each screen must handle. |
-| Product and test fixtures | Decide minimum publication fields, answer visibility options, and fixtures for houses, land, and apartments. Verify the happy path, cross-user authorization, retry safety, and model output quality. |
+| Product and test fixtures | Use the database contracts for publication fields and answer visibility. Define fixtures for houses, land, and apartments. Verify the happy path, cross-user authorization, retry safety, and model output quality. |
 | Hosted deployment | Choose hosting, broker persistence and recovery configuration, and a launch and smoke-test procedure that fits the remaining credits and submission requirements. |

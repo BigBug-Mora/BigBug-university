@@ -16,14 +16,14 @@ Run the interactive Python FastAPI process. Use LangGraph to coordinate agent st
 ## Interactive execution
 
 1. Validate the action and actor. Resolve the conversation or draft and its scope through the owning service.
-2. Load only the relevant permitted facts and messages. For property chat, [Engagement service](../engagement-service.md) owns the transcript. Agent API selects the context for each turn and obtains listing facts from [Property service](../property-service.md).
+2. Load only the relevant permitted facts and messages. For property chat, [Engagement service](../engagement-service/engagement-service.md) owns the transcript. Agent API selects the context for each turn and obtains listing facts from [Property service](../property-service/property-service.md).
 3. Run the appropriate LangGraph workflow with bounded time and model calls. Give it typed tool inputs and the least data and permissions necessary. Bind listing tools to the active listing during Property Chat.
 4. Check the output shape, fact support, qualifiers, and visibility before returning it or passing it to an owning service. If the evidence is missing or conflicting, follow the relevant workflow's unknown or clarification path.
 5. Persist the completed reply through the owning service when the workflow has a transcript. Return the saved reply and state. Use a stable turn identifier to recover from a retry or a disconnect after a reply was saved.
 
 ## Background job acceptance
 
-Verify the seller's authority and resolve the input revision through Property service. Save the job and its pending dispatch record in one transaction. Return a durable job ID and an accepted state after the transaction commits. The [Agent dispatcher](../agent-dispatcher.md) publishes the task to RabbitMQ. Scope job status and results to the requesting actor and authorized listing. A broker outage may delay work while the durable pending job remains visible.
+Verify the seller's authority and resolve the input revision through Property service. Save the job and its pending dispatch record in one transaction. Return a durable job ID and an accepted state after the transaction commits. The [Agent dispatcher](../agent-dispatcher/agent-dispatcher.md) publishes the task to RabbitMQ. Scope job status and results to the requesting actor and authorized listing. A broker outage may delay work while the durable pending job remains visible.
 
 ## Guardrails and operations
 

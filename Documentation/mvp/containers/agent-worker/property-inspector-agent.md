@@ -4,7 +4,7 @@
 
 ## Inputs and evidence
 
-Use the draft revision, property type, structured facts, and photo references from [Property service](../property-service.md). Retrieve the authorized photo set for that revision. Track which photos were actually reviewed so the result can distinguish a missing view from an image that could not be read.
+Use the draft revision, property type, structured facts, and photo references from [Property service](../property-service/property-service.md). Retrieve the authorized photo set for that revision. Track which photos were actually reviewed so the result can distinguish a missing view from an image that could not be read.
 
 ## Review
 

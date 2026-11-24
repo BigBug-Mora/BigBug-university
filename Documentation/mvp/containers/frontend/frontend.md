@@ -1,10 +1,10 @@
 # Frontend Container
 
-[Container directory](containers.md) · [MVP agent behavior](../agent-details/agent-details.md)
+[Container directory](../containers.md) · [MVP agent behavior](../../agent-details/agent-details.md)
 
 ## Runtime and responsibilities
 
-Run the Next.js, React, TypeScript, and Tailwind application. The Next.js server runs in the container. The browser renders screens and submits user actions. Use Cognito for sign-in, with the Auth.js integration described in the [tech stack](../teach-stack/tech-stack.md).
+Run the Next.js, React, TypeScript, and Tailwind application. The Next.js server runs in the container. The browser renders screens and submits user actions. Use Cognito for sign-in, with the Auth.js integration described in the [tech stack](../../teach-stack/tech-stack.md).
 
 | Area | User actions and states |
 | --- | --- |
@@ -15,10 +15,10 @@ Run the Next.js, React, TypeScript, and Tailwind application. The Next.js server
 
 ## Data and service calls
 
-- Call [Property service](property-service.md) for listing views, edits, publication, and authorized S3 transfers. Show progress and failures for individual uploads. A successful file transfer still needs a successful metadata registration before that photo appears in the draft.
+- Call [Property service](../property-service/property-service.md) for listing views, edits, publication, and authorized S3 transfers. Show progress and failures for individual uploads. A successful file transfer still needs a successful metadata registration before that photo appears in the draft.
 - On the property detail page, show the cover and key public facts near the top, up to three photo write-ups in story order, and the full gallery at the bottom. Keep featured photos in the gallery. Show the published property facts directly on the page and provide Property Chat for follow-up questions.
-- Call [Engagement service](engagement-service.md) for chat history, inbox records, confirmed questions, seller decisions, and disclosure results. Reload persisted messages from the authorized conversation when the browser refreshes. Use the selected listing and conversation IDs as navigation context. The backend validates the association.
-- Call [Agent API](agent-api/agent-api.md) for interactive replies and to request inspection or showcase work. Show pending, running, ready, and failed states from durable job status. Recover status after refresh.
+- Call [Engagement service](../engagement-service/engagement-service.md) for chat history, inbox records, confirmed questions, seller decisions, and disclosure results. Reload persisted messages from the authorized conversation when the browser refreshes. Use the selected listing and conversation IDs as navigation context. The backend validates the association.
+- Call [Agent API](../agent-api/agent-api.md) for interactive replies and to request inspection or showcase work. Show pending, running, ready, and failed states from durable job status. Recover status after refresh.
 - Keep form edits, progress indicators, and other transient state in the UI as appropriate. Unsent text is a local draft only if draft persistence is explicitly implemented. A completed chat turn and a pending inquiry are backed by server data.
 
 ## Permissions and failures

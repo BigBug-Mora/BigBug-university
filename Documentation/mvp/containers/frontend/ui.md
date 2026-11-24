@@ -1,6 +1,6 @@
 # EstateFlow UI
 
-Follow the [Courtyard House showcase](showcase/index.html) for the MVP’s visual design. Use generous spacing, large photos, and thin dividers on public property pages. Use tighter spacing for search, chat, and seller tools.
+Follow the [Courtyard House showcase](../../showcase/index.html) for the MVP’s visual design. Use generous spacing, large photos, and thin dividers on public property pages. Use tighter spacing for search, chat, and seller tools.
 
 ## Theme
 
@@ -23,4 +23,4 @@ Use shared CSS variables to apply the palette to both shadcn/ui controls and Tai
 - Make search results easy to scan with consistent photo proportions and predictable placement of price, location, and key facts.
 - Label controls, keep keyboard focus visible, and pair status colors with text.
 
-See the [frontend spec](containers/frontend.md) for screen behavior and the [MVP tech stack](teach-stack/tech-stack.md#1-technology-stack) for tooling.
+See the [frontend spec](frontend.md) for screen behavior and the [MVP tech stack](../../teach-stack/tech-stack.md#1-technology-stack) for tooling.

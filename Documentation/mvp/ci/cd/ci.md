@@ -8,7 +8,7 @@ Add `.github/workflows/ci.yml` when the first versioned migration is ready. Run 
 
 1. **Start with the database migration check.** Start a disposable PostgreSQL instance on the runner using the same major version as RDS. Apply the committed migrations to an empty database and load fictional fixtures for integration tests. Once a demo release exists, also test upgrading from its schema with sample records and verify that the records survive.
 2. **Add application checks as the code lands.** Install declared dependencies and run backend lint and unit tests, plus frontend lint, TypeScript checks, and tests as they become available.
-3. **Test the seller-to-buyer workflow through the API.** Use test identities and mocked model responses. Verify that two buyers asking about the same missing property fact create one seller inquiry group, that the approved answer reaches both eligible conversations, and that private details are visible only to buyers with a grant.
+3. **Test the seller-to-buyer workflow through the API.** Use test identities and mocked model responses. Verify that two buyers asking about the same missing property fact create one seller inquiry group, that the approved answer reaches both original conversations, that a third buyer can ask for the same shared fact, and that private details are visible only to buyers with a grant.
 4. **Verify packaging and startup.** Build the application images once Dockerfiles exist. When Compose is ready, start the stack and check that the frontend and API respond. Add RabbitMQ and a worker smoke test when background jobs are implemented.
 
 ## Shared AWS development
