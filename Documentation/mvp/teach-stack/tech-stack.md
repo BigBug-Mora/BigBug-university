@@ -10,7 +10,7 @@ Use this document for the MVP's technology and deployment decisions and [MVP age
 
 | Layer | Proposal | MVP approach |
 | --- | --- | --- |
-| Frontend | Next.js, React, TypeScript, Tailwind CSS | Use this stack for seller onboarding, the inbox, listing pages, buyer search, and property chat. |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS | Use this stack for seller onboarding, the inbox, listing pages, buyer search, and Property Chat. Use **shadcn/ui** for shared controls styled to match the [Courtyard House showcase](../showcase/index.html). |
 | Backend | Python, FastAPI, Docker, Docker Compose, domain-oriented microservices | Use Python and FastAPI for backend APIs, Docker for packaging, and Docker Compose for local development. |
 | Agents and orchestration | LangGraph, LangChain, initially the Anthropic Claude API, with configurable provider integrations | Run the Seller Agent, Property Inspector Agent, Property Showcase Creator Agent, and Buyer Agent inside the backend. Start with **Claude Haiku 5.5** (`claude-haiku-5-5`) via the direct Anthropic Claude API for text and photo review. Use the same model for the single-agent benchmark. Use LangGraph for handoffs and LangChain integrations where they simplify model access. |
 | Database and search | Amazon RDS for PostgreSQL, pgvector, and an embedding model | Use SQLAlchemy 2.x as the Python backend ORM for application records in shared RDS PostgreSQL. Start with structured listing filters and a pending-request rule based on the property and the underlying fact. Revisit embeddings and pgvector if evaluation shows a gap in search or question matching. |
