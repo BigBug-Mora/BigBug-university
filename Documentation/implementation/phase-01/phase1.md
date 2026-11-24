@@ -2,7 +2,7 @@
 
 After this phase, a teammate can clone the repo, run a small application smoke check, migrate and seed a disposable PostgreSQL instance, and see those checks pass in GitHub Actions. The team can also confirm access to the same private RDS, S3, and Cognito resources from two development machines. [Roadmap](../roadmap.md) · [Repository layout](../repository-layout.md)
 
-The starting repository has empty `project/main.py` and `project/requirements.txt` files. The initial PostgreSQL DDL lives in Markdown. Start with a thin service and test harness, then add the domain behavior in later phases. [Database schema](../../Documentation/mvp/database/schema.md) · [Technology stack](../../Documentation/mvp/teach-stack/tech-stack.md) · [CI design](../../Documentation/mvp/ci/cd/ci.md)
+The starting repository has empty `project/main.py` and `project/requirements.txt` files. The initial PostgreSQL DDL lives in Markdown. Start with a thin service and test harness, then add the domain behavior in later phases. [Database schema](../../mvp/database/schema.md) · [Technology stack](../../mvp/teach-stack/tech-stack.md) · [CI design](../../mvp/ci/cd/ci.md)
 
 ## Progress
 

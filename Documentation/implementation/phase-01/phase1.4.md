@@ -1,6 +1,6 @@
 # Phase 1.4 · Shared AWS development
 
-Set up the documented shared dependencies so two teammates can reach the same private PostgreSQL database, use the Cognito user pool, and read the same authorized photo fixture. Application containers run on teammates’ machines in this phase. [Phase 1](phase1.md) · [Shared AWS development design](../../Documentation/mvp/teach-stack/tech-stack.md#2-shared-aws-services-from-day-one) · [CI and shared AWS](../../Documentation/mvp/ci/cd/ci.md#shared-aws-development)
+Set up the documented shared dependencies so two teammates can reach the same private PostgreSQL database, use the Cognito user pool, and read the same authorized photo fixture. Application containers run on teammates’ machines in this phase. [Phase 1](phase1.md) · [Shared AWS development design](../../mvp/teach-stack/tech-stack.md#2-shared-aws-services-from-day-one) · [CI and shared AWS](../../mvp/ci/cd/ci.md#shared-aws-development)
 
 ## Progress
 

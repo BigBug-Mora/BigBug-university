@@ -1,6 +1,6 @@
 # Phase 1.2 · Versioned database and fixtures
 
-Create a repeatable way to build the schema described in the MVP docs and verify that it can hold representative listing data. Keep the initial migration explicit and reviewable. [Phase 1](phase1.md) · [Database diagram source](../../Documentation/mvp/database/schema.md) · [Database contracts](../../Documentation/mvp/database/contracts.md) · [Migration checks](../../Documentation/mvp/ci/cd/ci.md)
+Create a repeatable way to build the schema described in the MVP docs and verify that it can hold representative listing data. Keep the initial migration explicit and reviewable. [Phase 1](phase1.md) · [Database diagram source](../../mvp/database/schema.md) · [Database contracts](../../mvp/database/contracts.md) · [Migration checks](../../mvp/ci/cd/ci.md)
 
 ## Progress
 

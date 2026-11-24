@@ -1,6 +1,6 @@
 # Phase 1.3 · Continuous integration
 
-Run the starter application and migration checks on every pull request and push to `main`. Reuse the documented local checks so a teammate can reproduce a failure from the runner. [Phase 1](phase1.md) · [CI design](../../Documentation/mvp/ci/cd/ci.md)
+Run the starter application and migration checks on every pull request and push to `main`. Reuse the documented local checks so a teammate can reproduce a failure from the runner. [Phase 1](phase1.md) · [CI design](../../mvp/ci/cd/ci.md)
 
 ## Progress
 

@@ -1,6 +1,6 @@
 # Phase 1.1 · Runnable development foundation
 
-Give a teammate one documented way to run the first Python service from a clean checkout and see it respond. This subphase establishes the repository entry point used by subsequent phases. [Phase 1](phase1.md) · [Repository layout](../repository-layout.md) · [Technology stack](../../Documentation/mvp/teach-stack/tech-stack.md)
+Give a teammate one documented way to run the first Python service from a clean checkout and see it respond. This subphase establishes the repository entry point used by subsequent phases. [Phase 1](phase1.md) · [Repository layout](../repository-layout.md) · [Technology stack](../../mvp/teach-stack/tech-stack.md)
 
 ## Progress
 
