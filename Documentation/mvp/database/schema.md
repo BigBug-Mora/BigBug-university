@@ -424,6 +424,7 @@ CREATE TABLE property.private_details (
         CASE WHEN retired_at IS NULL THEN true END
     ) STORED,
 
+    UNIQUE (id, detail_kind),
     UNIQUE (listing_id, detail_kind, slot_no, active_slot),
     CHECK (
         (detail_kind = 'phone' AND slot_no BETWEEN 1 AND 3)
@@ -511,7 +512,8 @@ SELECT
     r.bathroom_count,
     s.headline,
     s.description,
-    s.highlights
+    s.highlights,
+    r.vehicle_access
 FROM property.current_publications cp
 JOIN property.publications p ON p.id = cp.publication_id
 JOIN property.listing_revisions r ON r.id = p.listing_revision_id
@@ -764,11 +766,13 @@ CREATE TABLE engagement.disclosure_grants (
     outcome            varchar(12) NOT NULL DEFAULT 'granted',
     request_kind       varchar(20) NOT NULL,
     detail_kind        varchar(20) NOT NULL,
-    private_detail_id  uuid NOT NULL,  -- Property API reference
+    private_detail_id  uuid NOT NULL,
 
     PRIMARY KEY (decision_id, private_detail_id),
     FOREIGN KEY (decision_id, outcome, request_kind)
         REFERENCES engagement.disclosure_decisions(id, outcome, request_kind),
+    FOREIGN KEY (private_detail_id, detail_kind)
+        REFERENCES property.private_details(id, detail_kind),
     CHECK (outcome = 'granted'),
     CHECK (
         (request_kind = 'phone' AND detail_kind = 'phone')
@@ -945,7 +949,8 @@ CREATE TABLE agent.job_results (
 --
 -- 6. Authorization: derive actors from verified Cognito identity. Enforce
 --    ownership, conversation membership, disclosure audience, and service
---    access at each API. Cross-service UUIDs deliberately have no SQL FK.
+--    access at each API. Disclosure grants have a SQL FK to private details
+--    for referential integrity. Resolve and authorize details through Property.
 --
 -- 7. Hosted cutover: stop local acceptance, drain local jobs and brokers,
 --    shut down local stacks, then run hosted jobs in their own scope.
