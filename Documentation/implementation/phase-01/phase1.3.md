@@ -7,7 +7,7 @@ Run the starter application and migration checks on every pull request and push 
 - [x] Add [the CI workflow](../../../.github/workflows/ci.yml) using the pinned Python dependencies and the disposable PostgreSQL 17 stack from [Phase 1.2](phase1.2.md).
 - [x] Apply migrations, load fictional fixtures, run database assertions and the [starter API test](phase1.1.md), and build and smoke-test the Property image. The workflow commands passed locally.
 - [x] Name the check `Database and Property smoke checks` and record the branch protection handoff below.
-- [ ] Record reproducible commands and the CI run that verifies the phase. Add later frontend, integration, and packaging checks when those components land.
+- [x] Record the reproducible commands and passing GitHub Actions run below. Add later frontend, integration, and packaging checks when those components land.
 
 ## Acceptance check
 
@@ -18,6 +18,7 @@ Open a pull request. The workflow must start a clean database, apply migrations,
 Reproduce the workflow from the repository root using the [service test](../../../README.md#run-the-service-test), [disposable database](../../../README.md#verify-the-disposable-database), and [Compose startup](../../../README.md#run-with-docker-compose) instructions. The [workflow](../../../.github/workflows/ci.yml) contains the exact runner commands.
 
 - On 2026-11-26, `python -m pip check` reported no broken requirements. The disposable database applied revision `0001`, loaded the fixtures, passed the SQL assertions, and reported `0001 (head)` after a second upgrade. The Property API test passed and the built image returned HTTP 200 with `{"status":"ok"}` through the published port. Both Compose test projects were removed afterward.
+- [Pull request #2](https://github.com/BigBug-Mora/BigBug-university/pull/2) triggered a [passing GitHub Actions run](https://github.com/BigBug-Mora/BigBug-university/actions/runs/45814678108) on Ubuntu 24.04. The job passed the migration, fixture and database assertions, Property API test, image build, and HTTP smoke check.
 
 ## Repository owner handoff
 
