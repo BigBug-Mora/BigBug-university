@@ -21,6 +21,7 @@ project/
   requirements.txt             Python tooling and entry-point dependencies
   compose.yaml                 Local application services
   compose.test.yaml            Disposable integration dependencies
+  alembic.ini                  Migration tooling configuration
   frontend/
   services/
     property/

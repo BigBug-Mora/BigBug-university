@@ -24,3 +24,4 @@ From two teammates’ machines, open the private database tunnel and verify the 
 ## Decision log
 
 - Use the shared AWS environment documented for development. Keep test fixtures disposable unless deliberately loading a named shared smoke-test fixture.
+- Use PostgreSQL 17 to match the [Phase 1.2 disposable checks](phase1.2.md#verification-and-ci-handoff). Phase 1.2 verified that major 17 is available in the configured `us-east-1` region. Confirm the final account, region, and instance-class eligibility before provisioning.

@@ -2,12 +2,12 @@
 
 After this phase, a teammate can clone the repo, run a small application smoke check, migrate and seed a disposable PostgreSQL instance, and see those checks pass in GitHub Actions. The team can also confirm access to the same private RDS, S3, and Cognito resources from two development machines. [Roadmap](../roadmap.md) · [Repository layout](../repository-layout.md)
 
-Phase 1.1 established a thin Property service with `project/main.py` as the local entry point. The initial PostgreSQL DDL lives in Markdown. Domain behavior follows in later phases. [Database schema](../../mvp/database/schema.md) · [Technology stack](../../mvp/teach-stack/tech-stack.md) · [CI design](../../mvp/ci/cd/ci.md)
+Phase 1.1 established a thin Property service with `project/main.py` as the local entry point. Phase 1.2 packaged the MVP PostgreSQL DDL as an Alembic migration and verified it with disposable fixtures. Domain behavior follows in later phases. [Database schema](../../mvp/database/schema.md) · [Technology stack](../../mvp/teach-stack/tech-stack.md) · [CI design](../../mvp/ci/cd/ci.md)
 
 ## Progress
 
 - [x] [Phase 1.1 · Runnable development foundation](phase1.1.md)
-- [ ] [Phase 1.2 · Versioned database and fixtures](phase1.2.md)
+- [x] [Phase 1.2 · Versioned database and fixtures](phase1.2.md)
 - [ ] [Phase 1.3 · Continuous integration](phase1.3.md)
 - [ ] [Phase 1.4 · Shared AWS development](phase1.4.md)
 - [ ] Record Phase 1 acceptance evidence and tick the roadmap.
@@ -30,4 +30,4 @@ Start with 1.1. At the beginning of 1.2, confirm a PostgreSQL major version with
 
 ## Discoveries and handoff
 
-Phase 1.1 verified direct startup, the Compose build and health response, and the service test. Phase 1.3 can reuse the [verified starter commands](phase1.1.md#verification-and-ci-handoff). Phase 1.2 begins by confirming the RDS PostgreSQL major version with Phase 1.4.
+Phase 1.3 can reuse the [verified starter commands](phase1.1.md#verification-and-ci-handoff) and the [verified PostgreSQL 17 commands](phase1.2.md#verification-and-ci-handoff). PostgreSQL 17 is the target for shared provisioning in Phase 1.4.
