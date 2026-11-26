@@ -2,11 +2,11 @@
 
 After this phase, a teammate can clone the repo, run a small application smoke check, migrate and seed a disposable PostgreSQL instance, and see those checks pass in GitHub Actions. The team can also confirm access to the same private RDS, S3, and Cognito resources from two development machines. [Roadmap](../roadmap.md) · [Repository layout](../repository-layout.md)
 
-The starting repository has empty `project/main.py` and `project/requirements.txt` files. The initial PostgreSQL DDL lives in Markdown. Start with a thin service and test harness, then add the domain behavior in later phases. [Database schema](../../mvp/database/schema.md) · [Technology stack](../../mvp/teach-stack/tech-stack.md) · [CI design](../../mvp/ci/cd/ci.md)
+Phase 1.1 established a thin Property service with `project/main.py` as the local entry point. The initial PostgreSQL DDL lives in Markdown. Domain behavior follows in later phases. [Database schema](../../mvp/database/schema.md) · [Technology stack](../../mvp/teach-stack/tech-stack.md) · [CI design](../../mvp/ci/cd/ci.md)
 
 ## Progress
 
-- [ ] [Phase 1.1 · Runnable development foundation](phase1.1.md)
+- [x] [Phase 1.1 · Runnable development foundation](phase1.1.md)
 - [ ] [Phase 1.2 · Versioned database and fixtures](phase1.2.md)
 - [ ] [Phase 1.3 · Continuous integration](phase1.3.md)
 - [ ] [Phase 1.4 · Shared AWS development](phase1.4.md)
@@ -30,4 +30,4 @@ Start with 1.1. At the beginning of 1.2, confirm a PostgreSQL major version with
 
 ## Discoveries and handoff
 
-Add the chosen versions, verified commands, relevant test output, and links to CI evidence as the work lands. Record any remaining dependency with its owning phase before handing off to Phase 2.
+Phase 1.1 verified direct startup, the Compose build and health response, and the service test. Phase 1.3 can reuse the [verified starter commands](phase1.1.md#verification-and-ci-handoff). Phase 1.2 begins by confirming the RDS PostgreSQL major version with Phase 1.4.
