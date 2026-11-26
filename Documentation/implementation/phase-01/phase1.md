@@ -8,7 +8,7 @@ Phase 1.1 established a thin Property service with `project/main.py` as the loca
 
 - [x] [Phase 1.1 · Runnable development foundation](phase1.1.md)
 - [x] [Phase 1.2 · Versioned database and fixtures](phase1.2.md)
-- [ ] [Phase 1.3 · Continuous integration](phase1.3.md)
+- [x] [Phase 1.3 · Continuous integration](phase1.3.md)
 - [ ] [Phase 1.4 · Shared AWS development](phase1.4.md)
 - [ ] Record Phase 1 acceptance evidence and tick the roadmap.
 
