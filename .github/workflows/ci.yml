@@ -1,0 +1,77 @@
+name: EstateFlow CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Database and Property smoke checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install -r project/requirements.txt -r project/services/property/tests/requirements.txt
+          python -m pip check
+
+      - name: Start disposable PostgreSQL 17
+        run: docker compose -p estateflow-db-test -f project/compose.test.yaml up -d --wait
+
+      - name: Migrate, load fixtures, and verify the database
+        env:
+          ESTATEFLOW_DATABASE_URL: postgresql+psycopg://estateflow_migrator:disposable-migration@127.0.0.1:55432/estateflow_test
+        run: |
+          python -m alembic -c project/alembic.ini upgrade head
+          docker compose -p estateflow-db-test -f project/compose.test.yaml exec -T db psql -X -U estateflow_migrator -d estateflow_test -v ON_ERROR_STOP=1 -f /fixtures/listings.sql
+          docker compose -p estateflow-db-test -f project/compose.test.yaml exec -T db psql -X -U estateflow_migrator -d estateflow_test -v ON_ERROR_STOP=1 -f /checks/assert_database.sql
+          python -m alembic -c project/alembic.ini upgrade head
+          python -m alembic -c project/alembic.ini current --check-heads
+
+      - name: Run the Property API test
+        run: python -m unittest discover -s project/services/property/tests -v
+
+      - name: Build and start the Property image
+        run: docker compose -p estateflow-ci -f project/compose.yaml up --build --detach --wait
+
+      - name: Smoke-test the Property container over HTTP
+        run: |
+          python - <<'PY'
+          import json
+          from urllib.request import urlopen
+
+          with urlopen("http://127.0.0.1:8000/health", timeout=5) as response:
+              body = json.load(response)
+              if response.status != 200 or body != {"status": "ok"}:
+                  raise SystemExit(f"Unexpected health response: HTTP {response.status} {body!r}")
+              print(f"GET /health: HTTP {response.status} {body!r}")
+          PY
+
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          docker compose -p estateflow-db-test -f project/compose.test.yaml logs --no-color
+          docker compose -p estateflow-ci -f project/compose.yaml logs --no-color
+
+      - name: Remove the disposable database
+        if: always()
+        run: docker compose -p estateflow-db-test -f project/compose.test.yaml down
+
+      - name: Remove the Property container
+        if: always()
+        run: docker compose -p estateflow-ci -f project/compose.yaml down
