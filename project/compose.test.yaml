@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: estateflow_test
+      POSTGRES_PASSWORD: disposable-bootstrap
+    ports:
+      - "127.0.0.1:55432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./tests/fixtures/bootstrap_database.sql:/docker-entrypoint-initdb.d/10-migration-owner.sql:ro
+      - ./tests/fixtures/listings.sql:/fixtures/listings.sql:ro
+      - ./tests/integration/assert_database.sql:/checks/assert_database.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "estateflow_migrator", "-d", "estateflow_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
