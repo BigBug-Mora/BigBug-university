@@ -79,3 +79,9 @@ Tear down the disposable project. Its database is stored in memory and resets wh
 ```sh
 docker compose -p estateflow-db-test -f project/compose.test.yaml down
 ```
+
+## Shared AWS development
+
+Use the [shared AWS development runbook](infra/runbooks/shared-aws-development.md) for console setup, the private RDS tunnel, reviewed migrations, and the shared AWS RDS, Cognito, and S3 smoke checks.
+
+Save and look up EstateFlow setup and test passwords in your local, Git-ignored `.env.rds-admin` file at the repository root. The [runbook lists the password keys and when to use them](infra/runbooks/shared-aws-development.md#local-passwords).

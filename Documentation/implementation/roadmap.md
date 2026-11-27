@@ -11,7 +11,7 @@ Build the documented four-agent marketplace for houses, apartments, and land. A 
 
 ## Phases
 
-- [ ] **01 · Development foundation**. Establish the local runner, first PostgreSQL migration, fixtures, CI, and shared AWS development setup. **Depends on** the existing MVP design. **Accept when** a clean checkout can migrate and load a disposable database, the checks pass in CI, and two teammates can verify access to the shared AWS dependencies. [Phase 1 plan](phase-01/phase1.md)
+- [x] **01 · Development foundation**. Establish the local runner, first PostgreSQL migration, fixtures, CI, and shared AWS development setup. **Depends on** the existing MVP design. **Accept when** a clean checkout can migrate and load a disposable database, the checks pass in CI, and shared AWS dependencies are verified (originally scoped for two teammates; finalized on 2026-11-27 with single-operator verification using the shared `Estateflow` IAM profile per owner decision). [Phase 1 plan](phase-01/phase1.md)
 
 - [ ] **02 · Identity and account access**. Establish Auth.js and Cognito sign-in, stable account mapping, and verified actor context across services. Decide where sign-in starts for buyers. **Depends on** 01. **Accept when** a returning Cognito user resolves to the same account and a protected endpoint rejects an unverified actor. Verify with test identities in CI and a deliberate Cognito smoke test. [Identity and access rules](../mvp/containers/containers.md#cross-container-rules) · [Database ownership](../mvp/database/contracts.md#ownership-and-authorization)
 
@@ -49,3 +49,4 @@ Build the documented four-agent marketplace for houses, apartments, and land. A 
 
 - Initial plan uses small, verifiable service boundaries and a detailed plan for Phase 1. Later phase plans will use the files, commands, and interfaces established by earlier phases.
 - Start shared AWS dependencies in Phase 1 and package services as they land. Reserve hosted application deployment for Phase 17, consistent with the documented development strategy.
+- On 2026-11-27, the owner standardized on a single shared `Estateflow` IAM identity (`estateflow-dev` CLI profile) and waived the two-teammate machine check for Phase 01 acceptance. Phase 15 will still rehearse the two-role seller/buyer workflow using the existing Cognito buyer and seller test accounts.
