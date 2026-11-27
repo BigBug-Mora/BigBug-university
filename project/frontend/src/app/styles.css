@@ -63,3 +63,16 @@ a:focus-visible, button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 4px;
 }
+
+.workspace { max-width: 64rem; margin: auto; display: grid; gap: 1.5rem; }
+.workspace h1::first-letter { text-transform: uppercase; }
+.workspace h2 { font: 2rem/1.2 "Instrument Serif", Georgia, serif; }
+.workspace section { border-top: 1px solid var(--border); padding-block: 1.25rem; }
+.workspace form, .workspace section { display: grid; gap: .9rem; }
+.workspace fieldset { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr)); gap: .8rem; }
+.workspace legend { margin: 1rem 0 .5rem; font-weight: 600; }
+.workspace label { display: grid; gap: .25rem; font-size: .9rem; }
+.workspace input, .workspace select { background: var(--background); color: var(--foreground); border: 1px solid var(--border); padding: .55rem; border-radius: .25rem; min-width: 0; }
+.workspace :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.workspace a { text-decoration: underline; }
+.workspace button { justify-self: start; }

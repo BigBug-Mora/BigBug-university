@@ -1,4 +1,9 @@
 services:
+  property-service:
+    environment:
+      ESTATEFLOW_PROPERTY_DATABASE_URL: postgresql://estateflow_property:disposable-property@db:5432/estateflow_test
+      ESTATEFLOW_PRIVATE_DETAIL_ACTIVE_KEY_REF: fixture
+      ESTATEFLOW_PRIVATE_DETAIL_KEYS: '{"fixture":"MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="}'
   identity-fixture:
     image: node:24-bookworm-slim
     command: ["node", "/fixture/oidc-fixture.mjs"]

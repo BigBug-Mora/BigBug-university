@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { sessionSettings } from "./config";
 import { verifyPropertyAccount } from "./account-api";
 
-export async function protectedAccount(destination: string) {
+export async function sessionToken() {
   const request = await headers();
   const { secret, secure, sessionCookie } = sessionSettings();
   const token = await getToken({
@@ -15,6 +15,11 @@ export async function protectedAccount(destination: string) {
     secureCookie: secure,
     cookieName: sessionCookie,
   });
+  return token;
+}
+
+export async function protectedAccount(destination: string) {
+  const token = await sessionToken();
   const signIn = `/sign-in?returnTo=${encodeURIComponent(destination)}`;
   if (!token || typeof token.accessToken !== "string" || typeof token.expiresAt !== "number") {
     redirect(signIn);

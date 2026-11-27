@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   foundation:
-    name: Database and Property smoke checks
+    name: Database, identity and seller draft acceptance
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -49,5 +49,5 @@ jobs:
           npm run typecheck
           npm run test:e2e
 
-      - name: Run database, service, and Compose browser acceptance
+      - name: Run PostgreSQL 17 role, draft, private-detail and Compose browser acceptance
         run: python project/tests/integration/identity_acceptance.py

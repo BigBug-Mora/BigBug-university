@@ -4,9 +4,12 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from project.services.property.actor import NO_STORE, Actor, ActorAuthentication
 from project.services.property.engagement import EngagementResolver
+from project.services.property.routes import listing_routes
 from project.shared.cognito import CognitoVerifier
 from project.shared.service_auth import ServiceAuthenticator
 
@@ -17,6 +20,19 @@ class AccountIdentity(BaseModel):
 
 def build_app(authentication: ActorAuthentication | None = None) -> FastAPI:
     app = FastAPI(title="EstateFlow Property Service")
+
+    @app.middleware("http")
+    async def draft_cache_policy(request: Request, call_next):
+        response = await call_next(request)
+        if request.url.path.split("/", 2)[1:2] == ["listings"]:
+            response.headers.update(NO_STORE)
+        return response
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, error: RequestValidationError):
+        # Framework validation can include submitted values, including private details.
+        return JSONResponse({"detail": "Check the requested fields and their types."},
+                            status_code=422, headers=NO_STORE)
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -35,6 +51,7 @@ def build_app(authentication: ActorAuthentication | None = None) -> FastAPI:
         response.headers.update(NO_STORE)
         return AccountIdentity(account_id=actor.account_id)
 
+    app.include_router(listing_routes(require_frontend_actor))
     return app
 
 

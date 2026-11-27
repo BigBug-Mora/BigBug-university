@@ -1,4 +1,4 @@
-"""Run the Phase 2 identity checks on a clean, disposable Compose stack."""
+"""Run identity and seller draft acceptance on a clean, disposable Compose stack."""
 
 import os
 from pathlib import Path
@@ -33,6 +33,7 @@ TEST_SETTINGS = {
     "ESTATEFLOW_ENGAGEMENT_DATABASE_URL": f"{RUNTIME}@db:5432/estateflow_test",
     "ESTATEFLOW_TEST_ENGAGEMENT_DATABASE_URL": f"{RUNTIME}@127.0.0.1:55432/estateflow_test",
     "ESTATEFLOW_TEST_MIGRATOR_DATABASE_URL": MIGRATOR,
+    "ESTATEFLOW_TEST_PROPERTY_DATABASE_URL": "postgresql://estateflow_property:disposable-property@127.0.0.1:55432/estateflow_test",
     "ESTATEFLOW_DATABASE_URL": MIGRATOR.replace("postgresql:", "postgresql+psycopg:", 1),
 }
 
@@ -78,6 +79,9 @@ def main():
              "-c", "ALTER ROLE estateflow_engagement PASSWORD 'disposable-engagement'",
              "-c", "REVOKE CONNECT, TEMPORARY ON DATABASE estateflow_test FROM PUBLIC")
         psql("estateflow_migrator", script="grant-engagement-runtime.sql")
+        psql("postgres", script="provision-property-runtime.sql")
+        psql("postgres", "-c", "ALTER ROLE estateflow_property PASSWORD 'disposable-property'")
+        psql("estateflow_migrator", script="grant-property-runtime.sql")
         psql("estateflow_migrator", "-f", "/fixtures/listings.sql", "-f", "/checks/assert_database.sql")
         run(python, "-m", "alembic", "-c", "project/alembic.ini", "upgrade", "head")
         run(python, "-m", "alembic", "-c", "project/alembic.ini", "current", "--check-heads")

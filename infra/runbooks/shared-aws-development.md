@@ -170,3 +170,7 @@ if ($LASTEXITCODE -eq 0) { Get-FileHash -Algorithm SHA256 -LiteralPath $PhotoPat
 ```
 
 Expect PostgreSQL 17, `estateflow_app`, and revision `0001` from the agreed RDS instance. The Cognito tool reports success after code exchange and a userInfo response. Both photo hashes must match the owner's recorded hash. Close the tunnel after testing. In the [Phase 1.4 plan](../../Documentation/implementation/phase-01/phase1.4.md), record each teammate's outcome, migration revision, and date. Keep passwords, tokens, signed URLs, and private fixture values out of the evidence.
+
+### Property runtime login
+
+After migration, run `infra/aws/provision-property-runtime.sql` once as the database administrator using the same TLS and psql procedure as Engagement. Set its password with `\password estateflow_property`. Run `infra/aws/grant-property-runtime.sql` as the migration owner. Configure Property with the resulting `ESTATEFLOW_PROPERTY_DATABASE_URL`. The role can append draft revisions and fact versions, advance the draft pointer and manage private detail slots.
