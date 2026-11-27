@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f4eb;
+  --foreground: #252a21;
+  --muted: #605f52;
+  --border: #d8d2c3;
+  --primary: #36492e;
+  --primary-text: #f7f4eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #21231d;
+    --foreground: #f3f0e6;
+    --muted: #c0bcae;
+    --border: #4d5042;
+    --primary: #c9d5ae;
+    --primary-text: #252a21;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "DM Sans", sans-serif;
+}
+
+h1 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: clamp(3rem, 8vw, 5.25rem);
+  line-height: 0.98;
+}
+
+p { color: var(--muted); }
+
+.site-header {
+  padding: 1rem clamp(1.5rem, 6vw, 5rem);
+  border-bottom: 1px solid var(--border);
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 2rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.625rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
