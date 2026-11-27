@@ -1,0 +1,27 @@
+import "server-only";
+
+import { getToken } from "next-auth/jwt";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { sessionSettings } from "./config";
+import { resolveAccount } from "./engagement";
+
+export async function protectedAccount(destination: string) {
+  const request = await headers();
+  const { secret, secure, sessionCookie } = sessionSettings();
+  const token = await getToken({
+    req: { headers: new Headers({ cookie: request.get("cookie") ?? "" }) },
+    secret,
+    secureCookie: secure,
+    cookieName: sessionCookie,
+  });
+  const signIn = `/sign-in?returnTo=${encodeURIComponent(destination)}`;
+  if (!token || typeof token.accessToken !== "string" || typeof token.expiresAt !== "number") {
+    redirect(signIn);
+  }
+  if (token.expiresAt * 1000 <= Date.now()) redirect(`${signIn}&status=expired`);
+
+  const account = await resolveAccount(token.accessToken);
+  if (account.status === "unauthorized") redirect(`${signIn}&status=expired`);
+  return account;
+}

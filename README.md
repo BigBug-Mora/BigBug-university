@@ -1,5 +1,9 @@
 # EstateFlow
 
+## Run the frontend sign-in checks
+
+The [frontend sign-in runbook](infra/runbooks/frontend-sign-in.md) covers the local browser tests, runtime configuration, and Cognito callback and sign-out URLs.
+
 ## Run the Property service
 
 From the repository root, create a virtual environment with Python 3.14 and activate it in your shell.
