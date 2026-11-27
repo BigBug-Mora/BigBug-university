@@ -82,6 +82,14 @@ GRANT USAGE ON SCHEMA public TO estateflow_developer;
 
 The designated migration operator confirms the reviewed Git revision and passing local and CI checks, agrees on a change window with teammates, and checks the RDS target and recovery option before applying the migration. The service-specific runtime roles belong to the phases that introduce database-backed operations.
 
+### Engagement runtime login
+
+After Alembic reaches head, use the same RDS tunnel and hostname-verified TLS connection to `estateflow_app` with `psql`. As the database administrator, run `\i infra/aws/provision-engagement-runtime.sql` once from the repository root and set the login password with `\password estateflow_engagement`. Use `ON_ERROR_STOP=1`. Reconnect as `estateflow_migrator` and run `\i infra/aws/grant-engagement-runtime.sql`. The administrator creates the login and grants database connection. The migration owner grants usage on the account schema and the columns needed for account lookup and insertion.
+
+Configure `ESTATEFLOW_ENGAGEMENT_DATABASE_URL` with the `estateflow_engagement` login, the RDS endpoint as `host`, the tunnel address reachable from Engagement as `hostaddr`, and the tunnel port. Use `sslmode=verify-full` and set `sslrootcert` to the RDS CA bundle path in the Engagement runtime. Supply the generated password through runtime secret configuration. Verify this connection from the running service in [Phase 2.4](../../Documentation/implementation/phase-02/phase2.4.md).
+
+### Migration commands
+
 From the repo root, activate the project virtual environment and install `project/requirements.txt`. In the second terminal, load the migration password from `.env.rds-admin` for Alembic. When the Compose client prompts separately, enter the same migration password.
 
 ```powershell

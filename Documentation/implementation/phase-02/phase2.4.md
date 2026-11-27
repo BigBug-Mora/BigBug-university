@@ -35,3 +35,27 @@ Run the browser and API acceptance checks against a clean local stack. Then repe
 | Pull request | Passing Actions run link and job names. |
 | Shared smoke | Date, tested Git revision, verified migration head, configured session lifetime, and anonymized results for buyer, seller, repeat sign-in, sign-out, and denial. |
 | Handoff | Runtime role and configuration names, verified startup commands, and any remaining owner or dependency. |
+
+### Phase 2.1 resolver verification
+
+Run from the repository root in PowerShell with the project virtual environment active and a fresh disposable database. The sample credentials below are for the disposable database.
+
+```powershell
+python -m pip install -r project/requirements.txt -r project/services/engagement/tests/requirements.txt
+python -m pip check
+$composeFile = 'project/compose.test.yaml'
+docker compose -p estateflow-db-test -f $composeFile up -d --wait
+$env:ESTATEFLOW_DATABASE_URL = 'postgresql+psycopg://estateflow_migrator:disposable-migration@127.0.0.1:55432/estateflow_test'
+python -m alembic -c project/alembic.ini upgrade head
+Get-Content -Raw infra/aws/provision-engagement-runtime.sql | docker compose -p estateflow-db-test -f $composeFile exec -T db psql -X -U postgres -d estateflow_test -v ON_ERROR_STOP=1
+docker compose -p estateflow-db-test -f $composeFile exec -T db psql -X -U postgres -d estateflow_test -v ON_ERROR_STOP=1 -c "ALTER ROLE estateflow_engagement PASSWORD 'disposable-engagement'" -c 'REVOKE CONNECT, TEMPORARY ON DATABASE estateflow_test FROM PUBLIC'
+Get-Content -Raw infra/aws/grant-engagement-runtime.sql | docker compose -p estateflow-db-test -f $composeFile exec -T db psql -X -U estateflow_migrator -d estateflow_test -v ON_ERROR_STOP=1
+docker compose -p estateflow-db-test -f $composeFile exec -T db psql -X -U estateflow_migrator -d estateflow_test -v ON_ERROR_STOP=1 -f /fixtures/listings.sql -f /checks/assert_database.sql
+$env:ESTATEFLOW_TEST_ENGAGEMENT_DATABASE_URL = 'postgresql://estateflow_engagement:disposable-engagement@127.0.0.1:55432/estateflow_test'
+$env:ESTATEFLOW_TEST_MIGRATOR_DATABASE_URL = 'postgresql://estateflow_migrator:disposable-migration@127.0.0.1:55432/estateflow_test'
+python -W error::ResourceWarning -m unittest discover -s project/services/engagement/tests -v
+python -m alembic -c project/alembic.ini upgrade head
+python -m alembic -c project/alembic.ini current --check-heads
+docker build -f project/services/engagement/Dockerfile -t estateflow-phase21-engagement project
+docker compose -p estateflow-db-test -f $composeFile down
+```
