@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { sessionSettings } from "./config";
-import { resolveAccount } from "./engagement";
+import { verifyPropertyAccount } from "./account-api";
 
 export async function protectedAccount(destination: string) {
   const request = await headers();
@@ -21,7 +21,7 @@ export async function protectedAccount(destination: string) {
   }
   if (token.expiresAt * 1000 <= Date.now()) redirect(`${signIn}&status=expired`);
 
-  const account = await resolveAccount(token.accessToken);
+  const account = await verifyPropertyAccount(token.accessToken);
   if (account.status === "unauthorized") redirect(`${signIn}&status=expired`);
   return account;
 }

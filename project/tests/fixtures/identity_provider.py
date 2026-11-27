@@ -14,8 +14,12 @@ CLIENT_ID = "estateflow-test-client"
 
 
 class IdentityFixture:
-    def __init__(self, bind_host: str = "127.0.0.1") -> None:
+    def __init__(
+        self, bind_host: str = "127.0.0.1", bind_port: int = 0, *, issuer_host: str = "127.0.0.1"
+    ) -> None:
         self.bind_host = bind_host
+        self.bind_port = bind_port
+        self.issuer_host = issuer_host
         self.keys = {
             kid: rsa.generate_private_key(public_exponent=65537, key_size=2048)
             for kid in ("initial", "rotated", "unpublished")
@@ -46,10 +50,10 @@ class IdentityFixture:
             def log_message(self, *args):
                 pass
 
-        self.server = ThreadingHTTPServer((self.bind_host, 0), JwksHandler)
+        self.server = ThreadingHTTPServer((self.bind_host, self.bind_port), JwksHandler)
         self.thread = Thread(target=self.server.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True)
         self.thread.start()
-        self.issuer = f"http://127.0.0.1:{self.server.server_port}/pool"
+        self.issuer = f"http://{self.issuer_host}:{self.server.server_port}/pool"
         return self
 
     def __exit__(self, *args):

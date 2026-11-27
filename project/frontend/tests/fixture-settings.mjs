@@ -4,6 +4,7 @@ export const callbackUrl = `${appOrigin}/api/auth/callback/cognito`;
 export const clientId = "estateflow-fixture-client";
 export const clientSecret = "estateflow-fixture-client-secret";
 export const serviceToken = "estateflow-fixture-frontend-token";
+export const propertyToken = "estateflow-fixture-frontend-to-property-token";
 export const accountId = "c0c0160c-9b20-4dc2-8d42-2ea6de091c78";
 
 export const appEnvironment = {
@@ -16,5 +17,7 @@ export const appEnvironment = {
   ESTATEFLOW_TEST_ALLOW_HTTP_ISSUER: "1",
   ESTATEFLOW_ENGAGEMENT_BASE_URL: fixtureOrigin,
   ESTATEFLOW_FRONTEND_TO_ENGAGEMENT_TOKEN: serviceToken,
+  ESTATEFLOW_PROPERTY_BASE_URL: fixtureOrigin,
+  ESTATEFLOW_FRONTEND_TO_PROPERTY_TOKEN: propertyToken,
   NEXT_TELEMETRY_DISABLED: "1",
 };

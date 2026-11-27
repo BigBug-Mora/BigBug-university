@@ -10,9 +10,9 @@ from fastapi.testclient import TestClient
 
 from project.services.engagement.accounts import AccountStore
 from project.services.engagement.app import build_app
-from project.services.engagement.tests.identity_fixture import CLIENT_ID, IdentityFixture
 from project.shared.cognito import CognitoVerifier
 from project.shared.service_auth import SERVICE_TOKEN_HEADER, ServiceAuthenticator
+from project.tests.fixtures.identity_provider import CLIENT_ID, IdentityFixture
 
 
 RESOLVE = "/internal/accounts/resolve"

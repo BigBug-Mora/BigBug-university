@@ -1,6 +1,6 @@
 import "server-only";
 
-import { engagementSettings } from "./config";
+import { engagementSettings, propertySettings } from "./config";
 
 type Resolution =
   | { status: "active"; accountId: string }
@@ -8,18 +8,32 @@ type Resolution =
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function resolveAccount(accessToken: string): Promise<Resolution> {
+export function resolveAccount(accessToken: string): Promise<Resolution> {
+  return requestAccount(engagementSettings, "/internal/accounts/resolve", "POST", accessToken, 3000);
+}
+
+export function verifyPropertyAccount(accessToken: string): Promise<Resolution> {
+  return requestAccount(propertySettings, "/internal/identity/me", "GET", accessToken, 7000);
+}
+
+async function requestAccount(
+  settings: () => { origin: string; serviceToken: string },
+  path: string,
+  method: "GET" | "POST",
+  accessToken: string,
+  timeout: number,
+): Promise<Resolution> {
   try {
-    const { origin, serviceToken } = engagementSettings();
-    const response = await fetch(new URL("/internal/accounts/resolve", origin), {
-      method: "POST",
+    const { origin, serviceToken } = settings();
+    const response = await fetch(new URL(path, origin), {
+      method,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "X-EstateFlow-Service-Token": serviceToken,
       },
       cache: "no-store",
       redirect: "error",
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(timeout),
     });
     if (response.status === 401) return { status: "unauthorized" };
     if (response.status === 403) return { status: "forbidden" };

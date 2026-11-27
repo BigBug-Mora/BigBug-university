@@ -1,7 +1,7 @@
 import { createHash, generateKeyPairSync, randomUUID, sign } from "node:crypto";
 import { createServer } from "node:http";
 import {
-  accountId, callbackUrl, clientId, clientSecret, fixtureOrigin, appOrigin, serviceToken,
+  accountId, callbackUrl, clientId, clientSecret, fixtureOrigin, appOrigin, serviceToken, propertyToken,
 } from "./fixture-settings.mjs";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -93,14 +93,16 @@ async function exchange(request, response) {
   });
 }
 
-function resolve(request, response) {
+function resolve(request, response, credential) {
   const access = request.headers.authorization?.slice("Bearer ".length);
-  if (request.headers["x-estateflow-service-token"] !== serviceToken ||
+  if (request.headers["x-estateflow-service-token"] !== credential ||
       !request.headers.authorization?.startsWith("Bearer ") || !(tokens.get(access) > Date.now() / 1000)) {
     return json(response, 401, { detail: "Unauthorized" });
   }
   if (mode === "forbidden") return json(response, 403, { detail: "Forbidden" });
-  if (mode === "outage") return json(response, 503, { detail: "Service unavailable" });
+  if (mode === "outage" || (mode === "property-outage" && credential === propertyToken)) {
+    return json(response, 503, { detail: "Service unavailable" });
+  }
   return json(response, 200, { account_id: mode === "malformed-account" ? "invalid" : accountId });
 }
 
@@ -136,7 +138,9 @@ const server = createServer((request, response) => {
       }
       return json(response, 401, { error: "invalid_token" });
     case "POST /internal/accounts/resolve":
-      return resolve(request, response);
+      return resolve(request, response, serviceToken);
+    case "GET /internal/identity/me":
+      return resolve(request, response, propertyToken);
     case "POST /fixture/mode":
       mode = searchParams.get("value");
       return json(response, 200, { status: "ok" });

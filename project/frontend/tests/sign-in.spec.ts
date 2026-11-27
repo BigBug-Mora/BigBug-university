@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { accountId, appOrigin, clientSecret, fixtureOrigin, serviceToken } from "./fixture-settings.mjs";
+import { accountId, appOrigin, clientSecret, fixtureOrigin, propertyToken, serviceToken } from "./fixture-settings.mjs";
 
 async function setMode(request: APIRequestContext, mode: string) {
   const url = new URL("/fixture/mode", fixtureOrigin);
@@ -39,6 +39,7 @@ test("buyer enters from home, refreshes, and signs out through managed logout", 
   expect(await response.json()).toEqual({ expires: expect.any(String) });
   const markup = await page.content();
   expect(markup).not.toContain(serviceToken);
+  expect(markup).not.toContain(propertyToken);
   expect(markup).not.toContain(clientSecret);
   expect(markup).not.toContain("accessToken");
 
@@ -127,7 +128,7 @@ test("access is rechecked and recovers after a backend outage", async ({ page, r
   await approve(page);
   await expect(page.getByText(accountId)).toBeVisible();
 
-  await setMode(request, "outage");
+  await setMode(request, "property-outage");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Service temporarily unavailable" })).toBeVisible();
   await expect(page.getByText(accountId)).toHaveCount(0);

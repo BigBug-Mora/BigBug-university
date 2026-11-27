@@ -1,0 +1,12 @@
+**
+!shared/
+!shared/cognito.py
+!shared/service_auth.py
+!shared/requirements-auth.txt
+!services/
+!services/property/
+!services/property/*.py
+!services/property/requirements.txt
+!services/engagement/
+!services/engagement/*.py
+!services/engagement/requirements.txt

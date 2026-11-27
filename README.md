@@ -2,7 +2,7 @@
 
 ## Run the frontend sign-in checks
 
-The [frontend sign-in runbook](infra/runbooks/frontend-sign-in.md) covers the local browser tests, runtime configuration, and Cognito callback and sign-out URLs.
+The [frontend sign-in runbook](infra/runbooks/frontend-sign-in.md) covers the local browser tests, the three-service Compose stack, and Cognito callback and sign-out URLs.
 
 ## Run the Property service
 
@@ -46,7 +46,7 @@ python -m pip install -r project/services/property/tests/requirements.txt
 python -m unittest discover -s project/services/property/tests
 ```
 
-The test runs in-process and verifies the health status and response body.
+The suite verifies health and the protected identity route using signed local test identities and an HTTP resolver fixture.
 
 ## Verify the disposable database
 

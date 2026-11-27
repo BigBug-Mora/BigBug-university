@@ -59,3 +59,11 @@ export function engagementSettings() {
     serviceToken: required("ESTATEFLOW_FRONTEND_TO_ENGAGEMENT_TOKEN"),
   };
 }
+
+export function propertySettings() {
+  const serviceToken = required("ESTATEFLOW_FRONTEND_TO_PROPERTY_TOKEN");
+  if (serviceToken === required("ESTATEFLOW_FRONTEND_TO_ENGAGEMENT_TOKEN")) {
+    throw new Error("Use distinct Frontend service credentials.");
+  }
+  return { origin: origin("ESTATEFLOW_PROPERTY_BASE_URL"), serviceToken };
+}
