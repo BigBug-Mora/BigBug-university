@@ -4,7 +4,7 @@ import NextAuth, { type Account } from "next-auth";
 import Cognito from "next-auth/providers/cognito";
 import { appOrigin, cognitoSettings, sessionSettings } from "@/server/config";
 import { callbackFailures, returnDestination } from "@/server/destinations";
-import { resolveAccount } from "@/server/engagement";
+import { resolveAccount } from "@/server/account-api";
 
 function providerSession(account: Account | null | undefined) {
   const accessToken = account?.access_token;

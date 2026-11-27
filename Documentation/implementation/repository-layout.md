@@ -50,7 +50,7 @@ Keep the existing `project/main.py` as the documented entry point. Phase 1 defin
 | Runtime role | Location and image | Process and ownership |
 | --- | --- | --- |
 | `frontend` | `project/frontend/Dockerfile` | Next.js server. Screens, session integration, and backend calls on behalf of the signed-in user. |
-| `property-service` | `project/services/property/Dockerfile` | FastAPI. Owns listing revisions, facts, private detail values, photos, showcases, publication, and search. |
+| `property-service` | `project/services/property/Dockerfile` | FastAPI. Verifies the actor for protected Property calls and owns listing revisions, facts, private detail values, photos, showcases, publication, and search. |
 | `engagement-service` | `project/services/engagement/Dockerfile` | FastAPI. Owns account mapping, conversations, ordinary inquiries and deliveries, and private disclosure grants. |
 | `agent-api` | `project/services/agent/Dockerfile` | FastAPI entry point. Runs interactive workflows and accepts jobs. |
 | `agent-dispatcher` | Same Agent image | Dispatcher entry point. Reads dispatch records and publishes eligible jobs. |
