@@ -27,3 +27,5 @@ Run the Property private-details unit and disposable PostgreSQL integration test
 | Edit an existing private detail | Value updates in `property.private_details` and `id` remains unchanged. |
 | Remove a private detail, then add a new one in the same slot | Original row has `retired_at IS NOT NULL`, `encrypted_value IS NULL`, `encryption_key_ref IS NULL`; new row gets a distinct `id`. |
 | Different authenticated account | Denied (`403`/`404`) on read, write, and delete; no plaintext leaked in responses or logs. |
+
+On 2026-11-28 all 12 Property tests passed against disposable PostgreSQL 17.6, including key rotation, authenticated detail identity, all five slots, duplicate denial, ciphertext inspection, retirement and cross-account denial. [Verification commands and revision](phase3.4.md#evidence)

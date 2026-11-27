@@ -6,8 +6,8 @@ Build the seller draft editor and Property service operations so an authenticate
 
 - [x] [3.1 · Property draft store, revisions, and ownership](phase3.1.md). Provision the scoped Property runtime database login, add listing/revision persistence and typed-fact validation for houses, apartments, and land, and enforce seller ownership on all draft routes.
 - [x] [3.2 · Encrypted private details](phase3.2.md). Implement authenticated encryption for `property.private_details`, slot management for phone numbers, written address, and map pin, in-place edits, and permanent ID retirement on removal.
-- [ ] [3.3 · Seller draft editor in Frontend](phase3.3.md). Add the server-side Property draft client and the signed-in seller workspace/editor UI for creating, editing, and reopening drafts and private details.
-- [ ] [3.4 · CI and end-to-end draft acceptance](phase3.4.md). Run cross-service and Playwright draft acceptance checks across two authenticated accounts and add the deterministic checks to CI.
+- [x] [3.3 · Seller draft editor in Frontend](phase3.3.md). Add the server-side Property draft client and the signed-in seller workspace/editor UI for creating, editing, and reopening drafts and private details.
+- [x] [3.4 · CI and end-to-end draft acceptance](phase3.4.md). Run cross-service and Playwright draft acceptance checks across two authenticated accounts and add the deterministic checks to CI.
 
 ## Scope and ownership
 

@@ -31,3 +31,5 @@ Start `project/compose.test.yaml`, apply Alembic to head, and provision `estatef
 | Stale `parent_revision_id` | Returns `409` without overwriting the newer draft. |
 | Different authenticated account or unauthenticated caller | Returns `401` (unauthenticated) or `403`/`404` (different seller) with no data leaked. |
 | Runtime login probe | `estateflow_property` can read/write `property.*` draft tables and is denied DDL or `account.*`/`engagement.*` access. |
+
+On 2026-11-28 the first implementation pass ran 10 Property tests successfully against disposable PostgreSQL 17.6 using the scoped login. The final Compose run repeats the draft and privilege checks. [Verification commands and revision](phase3.4.md#evidence)
