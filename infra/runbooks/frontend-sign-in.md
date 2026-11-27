@@ -73,7 +73,7 @@ Phase 17 hosting requires private backend endpoints, encrypted transport with ce
 
 ## Verify shared Cognito and RDS
 
-Use the dedicated confidential `estateflow-dev-authjs` client in the shared pool. Configure Cognito as its identity provider and enable the authorization-code grant with scope `openid`. Set the callback to `http://localhost:3000/api/auth/callback/cognito` and sign-out URL to `http://localhost:3000/`. The development client uses 60-minute access and ID tokens and a one-day refresh token. The application session has an eight-hour maximum and requests reauthentication when the Cognito access token expires.
+Use the dedicated confidential `estateflow-dev-authjs` client in the shared pool. Configure Cognito as its identity provider and enable the authorization-code grant with scope `openid`. Set the callback to `http://localhost:3000/api/auth/callback/cognito` and sign-out URL to `http://localhost:3000/`. On a Managed Login v2 domain, an app client created through the AWS CLI also requires Managed Login branding (`aws cognito-idp create-managed-login-branding --use-cognito-provided-values`), or `/login` will report that login pages are unavailable. The development client uses 60-minute access and ID tokens and a one-day refresh token. The application session has an eight-hour maximum and requests reauthentication when the Cognito access token expires.
 
 Open the [SSM tunnel and verify the database head](shared-aws-development.md#3-open-the-tunnel-bootstrap-roles-and-apply-migrations). Provision the [Engagement runtime login](shared-aws-development.md#engagement-runtime-login) and set up `project/.env.identity` as above. On Docker Desktop, resolve the host-side address from a Linux container while the tunnel is running.
 
