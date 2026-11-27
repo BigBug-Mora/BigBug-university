@@ -10,7 +10,7 @@ Run the Next.js, React, TypeScript, and Tailwind application. The Next.js server
 | --- | --- |
 | Seller | Create and edit a draft for a house, land, or apartment. Upload photos and review optional inspection suggestions. Use Save draft for a private save or Save and generate showcase to generate from that saved revision. Offer Regenerate showcase in the editor after facts change. Preview, edit and explicitly publish the matching revision and showcase. |
 | Seller inbox | View a current summary grouped by property and underlying missing fact. Review, approve, decline, or leave an item pending. Handle phone and location requests independently. |
-| Buyer | Search in natural language, browse published results, open a listing, and enter its Property Chat. Back to Search restores the previous query and results. |
+| Buyer | Sign in, search in natural language, browse published results, open a listing, and enter its Property Chat. Back to Search restores the previous query and results. |
 | Private details | Use the same request actions on the property page and in chat. In the dedicated result, show pending or declined status, the current values the seller has shared, or an unavailable state for a removed detail. In the seller editor, explain that editing a shared detail updates it for existing recipients. Removing the detail ends access through that detail ID. |
 
 ## Data and service calls
@@ -22,6 +22,8 @@ Run the Next.js, React, TypeScript, and Tailwind application. The Next.js server
 - Keep form edits, progress indicators, and other transient state in the UI as appropriate. Unsent text is a local draft only if draft persistence is explicitly implemented. A completed chat turn and a pending inquiry are backed by server data.
 
 ## Permissions and failures
+
+Require buyers to sign in before searching or opening a published listing, including from a direct link. After sign-in, resume the requested search page or listing. Require sellers to sign in before opening the seller workspace.
 
 Use server-side session handling for backend calls. Cognito, backend credentials, and public configuration have different audiences. Store secrets server-side and keep protected results out of shared caches, logs, and analytics. Display a dedicated phone or location result only after the backend returns it for the signed-in buyer.
 

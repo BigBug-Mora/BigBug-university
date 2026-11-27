@@ -4,6 +4,8 @@
 
 ## Search mode
 
+Require a verified buyer account before running search. Carry the verified actor context when calling Property.
+
 Turn natural-language input into structured requirements and preferences, then call the [Property service](../property-service/property-service.md) search operation. Use returned published listings and their available facts to explain matches, gaps, and unknowns. For example, a plot with unknown vehicle access should remain marked as needing confirmation when the buyer requires it. Return real listing IDs for the frontend to open. The frontend restores the previous query and results when the buyer returns from Property Chat.
 
 ## Property Chat

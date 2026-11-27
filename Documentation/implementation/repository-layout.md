@@ -15,6 +15,9 @@ Documentation/                 Team design references
     phase-01/
       phase1.md
       phase1.1.md ... phase1.4.md
+    phase-02/
+      phase2.md
+      phase2.1.md ... phase2.4.md
 docs/                          Organizer materials
 project/
   main.py                      Repository entry point
