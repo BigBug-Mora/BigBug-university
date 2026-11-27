@@ -1,5 +1,10 @@
-export const appOrigin = `http://127.0.0.1:${process.env.ESTATEFLOW_TEST_FRONTEND_PORT ?? 47120}`;
-export const fixtureOrigin = `http://127.0.0.1:${process.env.ESTATEFLOW_TEST_OIDC_PORT ?? 47121}`;
+export const identityStack = process.env.ESTATEFLOW_TEST_IDENTITY_STACK === "1";
+export const appOrigin = identityStack
+  ? "http://127.0.0.1:3000"
+  : `http://127.0.0.1:${process.env.ESTATEFLOW_TEST_FRONTEND_PORT ?? 47120}`;
+export const fixtureOrigin = identityStack
+  ? "http://identity-fixture:47121"
+  : `http://127.0.0.1:${process.env.ESTATEFLOW_TEST_OIDC_PORT ?? 47121}`;
 export const callbackUrl = `${appOrigin}/api/auth/callback/cognito`;
 export const clientId = "estateflow-fixture-client";
 export const clientSecret = "estateflow-fixture-client-secret";

@@ -9,7 +9,7 @@ Establish a browser sign-in flow and a backend authentication boundary that late
 - [x] [2.1 · Verified identity and account mapping](phase2.1.md). Use the Phase 1 schema and disposable PostgreSQL 17. Verify signed test identities and resolve accounts through Engagement.
 - [x] [2.2 · Frontend sign-in and session](phase2.2.md). Use the 2.1 API contract. A local test identity provider and fixture responses allow independent frontend work.
 - [x] [2.3 · Protected service calls](phase2.3.md). Use the 2.1 verifier and resolver. Exercise Property directly with signed test identities and use the protected route from the 2.2 frontend.
-- [ ] [2.4 · CI and shared Cognito acceptance](phase2.4.md). Integrate 2.1–2.3. Run the full local stack in CI and verify the same user path with live Cognito and shared RDS.
+- [x] [2.4 · CI and shared Cognito acceptance](phase2.4.md). Integrate 2.1–2.3. Run the full local stack in CI and verify the same user path with live Cognito and shared RDS.
 
 ## Scope and ownership
 

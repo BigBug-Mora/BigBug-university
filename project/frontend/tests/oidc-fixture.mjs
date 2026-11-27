@@ -1,7 +1,7 @@
 import { createHash, generateKeyPairSync, randomUUID, sign } from "node:crypto";
 import { createServer } from "node:http";
 import {
-  accountId, callbackUrl, clientId, clientSecret, fixtureOrigin, appOrigin, serviceToken, propertyToken,
+  accountId, callbackUrl, clientId, clientSecret, fixtureOrigin, appOrigin, serviceToken, propertyToken, identityStack,
 } from "./fixture-settings.mjs";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -43,6 +43,7 @@ function authorize(query, response) {
   response.end(`<!doctype html><title>EstateFlow test identity</title>
     <h1>Test identity provider</h1>
     <a href="/finish?id=${id}&amp;approve=1">Approve sign-in</a>
+    ${identityStack ? `<a href="/finish?id=${id}&amp;approve=1&amp;identity=seller">Approve as seller</a>` : ""}
     <a href="/finish?id=${id}">Cancel sign-in</a>`);
 }
 
@@ -55,7 +56,8 @@ function finish(query, response) {
   callback.searchParams.set("state", mode === "invalid-state" ? "invalid-state" : auth.state);
   if (query.has("approve")) {
     const code = randomUUID();
-    codes.set(code, auth);
+    const subject = identityStack && query.get("identity") === "seller" ? "fixture-seller" : "fixture-buyer";
+    codes.set(code, { ...auth, subject });
     callback.searchParams.set("code", code);
   } else {
     callback.searchParams.set("error", "access_denied");
@@ -82,9 +84,9 @@ async function exchange(request, response) {
   }
   const now = Math.floor(Date.now() / 1000);
   const expiresIn = mode === "short-session" ? 5 : 300;
-  const common = { iss: fixtureOrigin, sub: "fixture-buyer", iat: now, exp: now + expiresIn };
+  const common = { iss: fixtureOrigin, sub: auth.subject, iat: now, exp: now + expiresIn };
   const access = issueToken({ ...common, client_id: clientId, token_use: "access", jti: randomUUID() });
-  tokens.set(access, common.exp);
+  tokens.set(access, { subject: common.sub, expires: common.exp });
   return json(response, 200, {
     access_token: access,
     expires_in: expiresIn,
@@ -96,7 +98,7 @@ async function exchange(request, response) {
 function resolve(request, response, credential) {
   const access = request.headers.authorization?.slice("Bearer ".length);
   if (request.headers["x-estateflow-service-token"] !== credential ||
-      !request.headers.authorization?.startsWith("Bearer ") || !(tokens.get(access) > Date.now() / 1000)) {
+      !request.headers.authorization?.startsWith("Bearer ") || !(tokens.get(access)?.expires > Date.now() / 1000)) {
     return json(response, 401, { detail: "Unauthorized" });
   }
   if (mode === "forbidden") return json(response, 403, { detail: "Forbidden" });
@@ -133,25 +135,32 @@ const server = createServer((request, response) => {
     case "POST /token":
       return exchange(request, response).catch(() => json(response, 400, { error: "invalid_request" }));
     case "GET /userinfo":
-      if (tokens.get(request.headers.authorization?.slice("Bearer ".length)) > Date.now() / 1000) {
-        return json(response, 200, { sub: "fixture-buyer" });
+      {
+        const token = tokens.get(request.headers.authorization?.slice("Bearer ".length));
+        if (token?.expires > Date.now() / 1000) {
+          return json(response, 200, { sub: token.subject });
+        }
       }
       return json(response, 401, { error: "invalid_token" });
     case "POST /internal/accounts/resolve":
-      return resolve(request, response, serviceToken);
+      if (!identityStack) return resolve(request, response, serviceToken);
+      break;
     case "GET /internal/identity/me":
-      return resolve(request, response, propertyToken);
+      if (!identityStack) return resolve(request, response, propertyToken);
+      break;
     case "POST /fixture/mode":
-      mode = searchParams.get("value");
-      return json(response, 200, { status: "ok" });
+      if (!identityStack) {
+        mode = searchParams.get("value");
+        return json(response, 200, { status: "ok" });
+      }
+      break;
     case "GET /logout":
       if (searchParams.get("client_id") === clientId && searchParams.get("logout_uri") === `${appOrigin}/`) {
         return redirect(response, `${appOrigin}/`);
       }
       return json(response, 400, { error: "invalid_request" });
-    default:
-      return json(response, 404, { error: "not_found" });
   }
+  return json(response, 404, { error: "not_found" });
 });
 
-server.listen(Number(new URL(fixtureOrigin).port), "127.0.0.1");
+server.listen(Number(new URL(fixtureOrigin).port), identityStack ? "0.0.0.0" : "127.0.0.1");
