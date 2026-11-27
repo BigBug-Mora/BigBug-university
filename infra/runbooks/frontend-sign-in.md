@@ -15,6 +15,26 @@ npm run test:e2e
 
 Playwright starts the production build on `http://127.0.0.1:47120` and the test OIDC provider and API fixture on `http://127.0.0.1:47121`. It supplies fictional credentials and stops both processes when the run ends. If a port is reserved, use `ESTATEFLOW_TEST_FRONTEND_PORT` or `ESTATEFLOW_TEST_OIDC_PORT` to select an available loopback port.
 
+## Verify the complete identity stack
+
+Use Python 3.14, Node.js 24, and Docker Compose with Linux containers. From a clean checkout, activate a Python virtual environment and run these commands at the repository root. On a Linux host without the Chromium system dependencies, use `--with-deps` when installing Chromium.
+
+```sh
+python -m pip install -r project/requirements.txt -r project/services/property/tests/requirements.txt -r project/services/engagement/tests/requirements.txt
+python -m pip check
+cd project/frontend
+npm ci
+npx playwright install chromium
+npm run lint
+npm run build
+npm run typecheck
+npm run test:e2e
+cd ../..
+python project/tests/integration/identity_acceptance.py
+```
+
+The final command recreates the dedicated `estateflow-identity-test` Compose project and removes its containers and network on exit. Reserve loopback ports 3000 for Frontend, 8000 for Property, 55432 for disposable PostgreSQL, and 47121 for the identity fixture. Compose resolves `identity-fixture` on its bridge network and Playwright maps the same hostname to loopback in Chromium. The runner supplies fictional credentials and selects the full-stack browser test. Each suite must pass, Alembic must reach head on a repeat upgrade, and the full-stack test must verify sign-in, sign-out, UUID stability, distinct accounts, Property health, credential denial, disabled accounts, and resolver failure.
+
 ## Configure the frontend for Cognito
 
 Copy `.env.example` to `.env.local` and fill in these values. Keep the file local. Generate `AUTH_SECRET` with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"` and save the generated value.
@@ -50,3 +70,32 @@ docker compose --env-file project/.env.identity -f project/compose.yaml --profil
 Open `http://localhost:3000` for sign-in. The services use Compose DNS on the project's bridge network. Engagement has no published port. The Property port is bound to loopback for the existing health smoke check. Running Compose without the identity profile and without identity settings starts the Property health service on its own. The protected route returns 503 in this mode.
 
 Phase 17 hosting requires private backend endpoints, encrypted transport with certificate verification for internal calls, and runtime secret distribution scoped to each service and connection. The HTTP service origins in the example are for local Compose.
+
+## Verify shared Cognito and RDS
+
+Use the dedicated confidential `estateflow-dev-authjs` client in the shared pool. Configure Cognito as its identity provider and enable the authorization-code grant with scope `openid`. Set the callback to `http://localhost:3000/api/auth/callback/cognito` and sign-out URL to `http://localhost:3000/`. The development client uses 60-minute access and ID tokens and a one-day refresh token. The application session has an eight-hour maximum and requests reauthentication when the Cognito access token expires.
+
+Open the [SSM tunnel and verify the database head](shared-aws-development.md#3-open-the-tunnel-bootstrap-roles-and-apply-migrations). Provision the [Engagement runtime login](shared-aws-development.md#engagement-runtime-login) and set up `project/.env.identity` as above. On Docker Desktop, resolve the host-side address from a Linux container while the tunnel is running.
+
+```powershell
+docker run --rm postgres:17-bookworm getent ahostsv4 host.docker.internal
+$env:ESTATEFLOW_RDS_CA_FILE = (Resolve-Path '<path to the AWS RDS CA bundle>').Path
+```
+
+Set `ESTATEFLOW_ENGAGEMENT_DATABASE_URL` in the local identity environment file to a libpq connection string with `host=<RDS endpoint> hostaddr=<numeric Docker host address> port=15432 dbname=estateflow_app user=estateflow_engagement password=<runtime password> sslmode=verify-full sslrootcert=/rds-ca.pem`. Use the RDS Compose override to mount the certificate into Engagement. On other Docker setups, supply the address of a tunnel listener reachable from the Engagement container.
+
+```powershell
+$stack = @('-p', 'estateflow-identity-live', '--env-file', 'project/.env.identity', '-f', 'project/compose.yaml', '-f', 'project/compose.identity-rds.yaml', '--profile', 'identity')
+docker compose @stack up --build --detach --wait
+docker compose @stack exec -T engagement-service python -c "import os, psycopg; db = psycopg.connect(os.environ['ESTATEFLOW_ENGAGEMENT_DATABASE_URL']); print(db.execute('SELECT current_user, ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()').fetchone()); db.close()"
+```
+
+Expect `('estateflow_engagement', True)`. In a fresh browser context, open the buyer listing fixture and sign in through Cognito. Refresh and compare the account UUID. Check that `/api/auth/session` contains only the expiry. Sign out, confirm the protected page prompts for sign-in, and sign in again to check the same UUID. Use a separate context for the seller and check for a distinct UUID. Confirm denial and health through the loopback Property port.
+
+```powershell
+curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:8000/internal/identity/me
+curl.exe --fail http://127.0.0.1:8000/health
+docker compose @stack down
+```
+
+Expect `401` and `{"status":"ok"}`. Stop the SSM session after the smoke test and record the tested revision and anonymized results in the [Phase 2.4 plan](../../Documentation/implementation/phase-02/phase2.4.md).

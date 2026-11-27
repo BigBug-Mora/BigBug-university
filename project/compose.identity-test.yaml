@@ -1,0 +1,16 @@
+services:
+  identity-fixture:
+    image: node:24-bookworm-slim
+    command: ["node", "/fixture/oidc-fixture.mjs"]
+    user: node
+    environment:
+      ESTATEFLOW_TEST_IDENTITY_STACK: "1"
+    ports:
+      - "127.0.0.1:47121:47121"
+    volumes:
+      - ./frontend/tests:/fixture:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:47121/').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 10

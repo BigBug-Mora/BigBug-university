@@ -1,0 +1,9 @@
+services:
+  engagement-service:
+    volumes:
+      - type: bind
+        source: ${ESTATEFLOW_RDS_CA_FILE:?Set the absolute path to the AWS RDS CA bundle}
+        target: /rds-ca.pem
+        read_only: true
+        bind:
+          create_host_path: false

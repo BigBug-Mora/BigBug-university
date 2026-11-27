@@ -11,6 +11,7 @@ Save EstateFlow setup and test passwords in `.env.rds-admin` at the repository r
 | `RDS_ADMIN_PASSWORD` | Sign in as the PostgreSQL administrator for database setup and administration. |
 | `RDS_MIGRATOR_PASSWORD` | Sign in as `estateflow_migrator` to apply reviewed migrations. |
 | `RDS_DEVELOPER_PASSWORD` | Sign in with your PostgreSQL developer login for the RDS smoke check. |
+| `RDS_ENGAGEMENT_PASSWORD` | Configure the scoped Engagement login for the Phase 2.4 stack. |
 | `COGNITO_SMOKE_BUYER_PASSWORD` or `COGNITO_SMOKE_SELLER_PASSWORD` | Sign in as your assigned buyer or seller in the Cognito smoke check. |
 
 Keep password values out of Markdown, screenshots, terminal output, and Git. AWS CLI session credentials stay in the named AWS profile.
@@ -86,7 +87,7 @@ The designated migration operator confirms the reviewed Git revision and passing
 
 After Alembic reaches head, use the same RDS tunnel and hostname-verified TLS connection to `estateflow_app` with `psql`. As the database administrator, run `\i infra/aws/provision-engagement-runtime.sql` once from the repository root and set the login password with `\password estateflow_engagement`. Use `ON_ERROR_STOP=1`. Reconnect as `estateflow_migrator` and run `\i infra/aws/grant-engagement-runtime.sql`. The administrator creates the login and grants database connection. The migration owner grants usage on the account schema and the columns needed for account lookup and insertion.
 
-Configure `ESTATEFLOW_ENGAGEMENT_DATABASE_URL` with the `estateflow_engagement` login, the RDS endpoint as `host`, the tunnel address reachable from Engagement as `hostaddr`, and the tunnel port. Use `sslmode=verify-full` and set `sslrootcert` to the RDS CA bundle path in the Engagement runtime. Supply the generated password through runtime secret configuration. Verify this connection from the running service in [Phase 2.4](../../Documentation/implementation/phase-02/phase2.4.md).
+Configure `ESTATEFLOW_ENGAGEMENT_DATABASE_URL` with the `estateflow_engagement` login, the RDS endpoint as `host`, the tunnel address reachable from Engagement as `hostaddr`, and the tunnel port. Use `sslmode=verify-full` and mount the RDS CA bundle at the configured `sslrootcert` path. Use the [shared identity stack commands](frontend-sign-in.md#verify-shared-cognito-and-rds) to verify this connection from the running service.
 
 ### Migration commands
 

@@ -8,8 +8,8 @@ Run the browser and API acceptance checks against a clean local stack. Then repe
 
 - [ ] Extend `.github/workflows/ci.yml` to install the pinned frontend and backend dependencies and run the 2.1–2.3 checks. Reuse disposable PostgreSQL and the existing migrations, fixture assertions, and Property health smoke. Run frontend lint, type checking, and the committed frontend test commands.
 - [ ] Build Frontend, Property, and Engagement in Compose. Run the browser acceptance flow against those images with a local test OIDC provider and JWKS. Use an issuer URL that resolves consistently from the browser and app containers. Have the test provider issue access tokens with the same claim shape the production verifier expects. Use the same Auth.js, verifier, resolver, and database paths as the live flow. Configure test issuers and credentials only in the test setup. Clean up the application and disposable database stacks on failure and success, and keep diagnostic output free of secrets.
-- [ ] Document exact local commands, supported configuration and ports, and expected results in the README or linked runbook. Keep the original Phase 1 startup and test instructions usable.
-- [ ] Provision the dedicated confidential Auth.js app client in the shared Cognito pool. Enable authorization-code flow, register the exact development callback and sign-out URLs, and verify the requested scopes. Reuse the existing buyer and seller identities and keep the Phase 1 PKCE client available for its smoke script.
+- [x] Document exact local commands, supported configuration and ports, and expected results in the [frontend sign-in runbook](../../../infra/runbooks/frontend-sign-in.md#verify-the-complete-identity-stack). The Phase 1 startup and test instructions still apply.
+- [x] Provision the dedicated confidential Auth.js app client in the shared Cognito pool. AWS CLI confirmed `estateflow-dev-authjs` has a secret, the registered development callback and sign-out URLs, the authorization-code grant, and scope `openid`. The separate Phase 1 PKCE client remains available.
 - [ ] Review shared database access. Confirm the migration head, provision the dedicated Engagement runtime login and grants, and check that the running Engagement app can reach the existing SSM tunnel using the RDS CA bundle and full hostname verification. Document the tunnel address from the app's runtime environment. Apply any required reviewed migrations explicitly before starting the shared stack.
 - [ ] Record successful CI and live Cognito evidence below. Tick the phase plan and roadmap only after both checks pass.
 
@@ -35,6 +35,11 @@ Run the browser and API acceptance checks against a clean local stack. Then repe
 | Pull request | Passing Actions run link and job names. |
 | Shared smoke | Date, tested Git revision, verified migration head, configured session lifetime, and anonymized results for buyer, seller, repeat sign-in, sign-out, and denial. |
 | Handoff | Runtime role and configuration names, verified startup commands, and any remaining owner or dependency. |
+
+### Verification notes
+
+- On 2026-11-27, the local fixture run passed frontend lint, build, type checking, and all 11 browser tests. The shared Cognito client was created with 60-minute access and ID tokens and a one-day refresh token.
+- The shared RDS connection timed out through SSM. AWS reported RDS available and the tunnel node online. Database ingress allows TCP 5432 from `estateflow-tunnel`, but the tunnel security group had no outbound rules. Restoring the documented TCP 5432 rule to `estateflow-db` requires owner approval before the shared database and live identity checks can finish.
 
 ### Phase 2.1 resolver verification
 
