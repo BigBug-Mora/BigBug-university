@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { fixtureOrigin, propertyToken } from "./fixture-settings.mjs";
 
@@ -13,7 +13,7 @@ function compose(...args: string[]) {
     "-f", "project/compose.test.yaml", "-f", "project/compose.identity-test.yaml",
     "--profile", "identity", ...args,
   ], {
-    cwd: fileURLToPath(new URL("../../../", import.meta.url)),
+    cwd: resolve(__dirname, "../../.."),
     encoding: "utf8",
     timeout: 15_000,
   }).trim();
