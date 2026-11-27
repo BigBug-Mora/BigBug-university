@@ -12,11 +12,14 @@ def transaction():
     if not url:
         raise HTTPException(503, "Draft store unavailable")
     try:
-        with psycopg.connect(url, row_factory=dict_row, connect_timeout=3,
-                             options="-c statement_timeout=5000") as db:
+        with psycopg.connect(
+            url, row_factory=dict_row, connect_timeout=3, options="-c statement_timeout=5000"
+        ) as db:
             yield db
     except (psycopg.errors.CheckViolation, psycopg.DataError):
-        raise HTTPException(422, "Check the fields, related counts, price and measurement units.") from None
+        raise HTTPException(
+            422, "Check the fields, related counts, price and measurement units."
+        ) from None
     except psycopg.Error:
         raise HTTPException(503, "Draft store unavailable") from None
 

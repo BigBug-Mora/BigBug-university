@@ -41,9 +41,19 @@ def validate(kind, slot, value):
         phone = re.sub(r"[\s().-]", "", value)
         if re.fullmatch(r"\+?[0-9]{7,15}", phone):
             return phone
-    if kind == "written_address" and slot == 1 and isinstance(value, str) and 0 < len(value.strip()) <= 2000:
+    if (
+        kind == "written_address"
+        and slot == 1
+        and isinstance(value, str)
+        and 0 < len(value.strip()) <= 2000
+    ):
         return value.strip()
-    if kind == "map_pin" and slot == 1 and isinstance(value, dict) and set(value) == {"latitude", "longitude"}:
+    if (
+        kind == "map_pin"
+        and slot == 1
+        and isinstance(value, dict)
+        and set(value) == {"latitude", "longitude"}
+    ):
         try:
             lat, lng = (Decimal(str(value[key])) for key in ("latitude", "longitude"))
             if -90 <= lat <= 90 and -180 <= lng <= 180:
@@ -61,9 +71,11 @@ def private_routes(require_actor):
     def details(listing_id: UUID, seller=actor):
         with transaction() as db:
             owned_listing(db, listing_id, seller.account_id)
-            rows = db.execute("""SELECT id,detail_kind,slot_no,updated_at,retired_at,encrypted_value,encryption_key_ref
+            rows = db.execute(
+                """SELECT id,detail_kind,slot_no,updated_at,retired_at,encrypted_value,encryption_key_ref
                                  FROM property.private_details WHERE listing_id=%s ORDER BY detail_kind,slot_no,updated_at""",
-                              (listing_id,)).fetchall()
+                (listing_id,),
+            ).fetchall()
             keys = KeyRing()
             for row in rows:
                 if row["retired_at"] is None:
@@ -77,9 +89,11 @@ def private_routes(require_actor):
             owned_listing(db, listing_id, seller.account_id, lock=True)
             value = validate(kind, slot, payload.get("value"))
             keys = KeyRing()
-            active = db.execute("""SELECT id,slot_no,encrypted_value,encryption_key_ref FROM property.private_details
+            active = db.execute(
+                """SELECT id,slot_no,encrypted_value,encryption_key_ref FROM property.private_details
                                    WHERE listing_id=%s AND detail_kind=%s AND retired_at IS NULL""",
-                                (listing_id, kind)).fetchall()
+                (listing_id, kind),
+            ).fetchall()
             existing = None
             for row in active:
                 if row["slot_no"] == slot:
@@ -89,21 +103,30 @@ def private_routes(require_actor):
             detail_id = existing or uuid4()
             encrypted = keys.encrypt(detail_id, value)
             if existing:
-                db.execute("""UPDATE property.private_details SET encrypted_value=%s,encryption_key_ref=%s,
-                              updated_at=now() WHERE id=%s""", (encrypted,keys.active,detail_id))
+                db.execute(
+                    """UPDATE property.private_details SET encrypted_value=%s,encryption_key_ref=%s,
+                              updated_at=now() WHERE id=%s""",
+                    (encrypted, keys.active, detail_id),
+                )
             else:
-                db.execute("""INSERT INTO property.private_details
+                db.execute(
+                    """INSERT INTO property.private_details
                               (id,listing_id,detail_kind,slot_no,encrypted_value,encryption_key_ref)
-                              VALUES (%s,%s,%s,%s,%s,%s)""", (detail_id,listing_id,kind,slot,encrypted,keys.active))
+                              VALUES (%s,%s,%s,%s,%s,%s)""",
+                    (detail_id, listing_id, kind, slot, encrypted, keys.active),
+                )
             return {"id": detail_id}
 
     @router.delete("/{detail_id}", status_code=204)
     def retire(listing_id: UUID, detail_id: UUID, seller=actor):
         with transaction() as db:
             owned_listing(db, listing_id, seller.account_id, lock=True)
-            row = db.execute("""UPDATE property.private_details SET encrypted_value=NULL,encryption_key_ref=NULL,
+            row = db.execute(
+                """UPDATE property.private_details SET encrypted_value=NULL,encryption_key_ref=NULL,
                                 updated_at=coalesce(retired_at,now()),retired_at=coalesce(retired_at,now())
-                                WHERE id=%s AND listing_id=%s RETURNING id""", (detail_id,listing_id)).fetchone()
+                                WHERE id=%s AND listing_id=%s RETURNING id""",
+                (detail_id, listing_id),
+            ).fetchone()
             if not row:
                 raise HTTPException(404, "Detail unavailable")
 
