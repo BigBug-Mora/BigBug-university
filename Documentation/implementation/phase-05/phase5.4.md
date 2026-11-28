@@ -17,8 +17,8 @@ Verify the complete Phase 5 structured search and Back-to-Search workflow across
   - Buyer filters land by `max_price` (e.g., `5500000` includes the `250000/perch` plot and shows its approximate calculated total; `4500000` excludes it) and by cross-unit area (`min_land_area=15&land_area_unit=perch`).
   - Buyer opens a listing from the filtered results, verifies the published listing page, clicks **Back to Search**, and confirms the previous filters, URL query string, and matching result cards are restored.
   - Verify `Cache-Control: no-store`, zero private phone numbers in search responses/DOM, and desktop + mobile (`390×844`) responsive layout without horizontal overflow.
-- [ ] Run the full local acceptance suite (`python project/tests/integration/identity_acceptance.py`) and verify GitHub Actions CI passes.
-- [ ] Record exact commands, Git revision, date, and observed results in **Evidence** below before ticking Phase 5 in [roadmap.md](../roadmap.md).
+- [x] Run the full local acceptance suite (`python project/tests/integration/identity_acceptance.py`) and verify GitHub Actions CI passes.
+- [x] Record exact commands, Git revision, date, and observed results in **Evidence** below before ticking Phase 5 in [roadmap.md](../roadmap.md).
 
 ## Acceptance check
 
@@ -67,7 +67,20 @@ The runner exited **0** and removed its disposable containers/network. After the
 
 The new browser case verified all four vehicle modes; required-mode confirmed-first ordering and explicit unknown status; a per-perch plot included at a LKR 5,500,000 maximum and excluded at LKR 4,500,000 or a LKR 5,500,000 minimum; acre-to-perch land minima and square-metre-to-square-foot floor minima; zero bedrooms/parking distinct from unknowns; unpublished exclusion and `404`; unauthorized search `401`; no-store API/frontend responses; no private phone/address/pin or service credential values in results/DOM; search and nested listing context sign-in resume; exact Back-to-Search URL/control/result restoration; and pagination. Desktop **1280×800** and mobile **390×844** screenshots were inspected, with document and individual-card overflow assertions passing.
 
-The original `listings.sql`, `assert_database.sql`, `sign-in.spec.ts`, and `identity-stack.spec.ts` are unchanged. GitHub Actions verification of the pushed Phase 5.4 implementation/evidence head is the remaining gate before Phase 5 completion is ticked.
+The original `listings.sql`, `assert_database.sql`, `sign-in.spec.ts`, and `identity-stack.spec.ts` are unchanged. GitHub Actions [passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46144370095) on **2026-11-28 (Asia/Colombo)** at evidence head **`244642187167bec34ef99ae13f79246ce736963d`**, containing implementation **`0b60d0664394d0e3a8790d693af858e1d7960507`**. The GitHub API confirmed the exact head, `status=completed` and `conclusion=success` before Phase 5 and roadmap completion were ticked. CI ran the same complete acceptance runner on Ubuntu 24.04, Python 3.14 and Node 24. All local and CI acceptance requirements passed.
+
+## Sequential commit and CI closeout
+
+Plan setup `f8db20aeafadf9e887cf07496ac9eededc9bbc82` was committed and pushed before implementation ([successful CI](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46141027192)). Every subphase's implementation/evidence commits were pushed and its CI success verified before starting the next.
+
+| Subphase | Implementation | Evidence | Observed local Property / Engagement / standalone / stack counts | Verified CI |
+| --- | --- | --- | --- | --- |
+| 5.1 | `4f26793` | `0dbd828` | 28 / 9 / 11 / 5 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46141489016) |
+| 5.2 | `e114ae7` | `5b60491` | 37 / 9 / 11 / 5 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46142226695) |
+| 5.3 | `732a110` | `0913b60` | 37 / 9 / 14 / 6 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46143424358) |
+| 5.4 | `0b60d06` | `2446421` | 37 / 9 / 14 / 7 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46144370095) |
+
+Frontend lint/build/typecheck passed in every subphase. From 5.3 onward, the 14 standalone checks consist of the unchanged 11 OIDC cases plus three navigation/price-format checks. The final completion documentation is committed and pushed separately after the 5.4 local-plus-CI gate; its automatically triggered final CI run is verified before handing back.
 
 ## Implementation decisions
 

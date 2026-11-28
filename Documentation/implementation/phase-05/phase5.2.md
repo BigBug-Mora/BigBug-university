@@ -49,4 +49,4 @@ The complete runner exited **0**: frontend lint/build/typecheck passed, **11 sta
 
 Nine new integration tests cover all property types, all vehicle modes and required-mode ordering, escaped text/case matching, five per-unit pricing denominators and five land-area query units, both floor-area units, inclusive price bounds/currency isolation, zero/unknown counts, deterministic paginated results and empty-page totals, unpublished/private-draft isolation and republishing, private phone/address/pin exclusion, authentication, invalid query combinations and no-store headers. The original Phase 1–4 tests remain passing.
 
-The pushed implementation/evidence head must pass GitHub Actions before starting 5.3; its verified run link is included in the final Phase 5.4 closeout record.
+GitHub Actions [passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46142226695) at evidence head `5b6049130bfe9e71c0e953093e53be0ff3a7c7d7`, verified before 5.3 began. The final Phase 5.4 closeout collects all subphase commits and CI links.

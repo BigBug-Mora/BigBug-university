@@ -53,4 +53,4 @@ The runner exited **0**: frontend lint/build/typecheck passed; **14 standalone c
 
 Frontend commands are `npm run lint`, `build`, `typecheck`, and standalone `test:e2e` with `project/frontend` as cwd. After adding the focused UI smoke test, `npm --prefix project/frontend run lint` and `npm --prefix project/frontend run typecheck` also passed on the final test source. The smoke test selected land, entered budget and cross-unit area criteria, verified the approximate LKR 5,000,000 published total and confirmed-access badge, opened the real listing, restored the exact prior URL/control values/result through Back to Search, and cleared the filters. Desktop and 390×844 screenshots were inspected; mobile document-width overflow assertion passed.
 
-The pushed implementation/evidence head must pass CI before 5.4 begins. Final verified CI links are collected in the Phase 5.4 closeout record.
+GitHub Actions [passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46143424358) at evidence head `0913b6087791905a680109d818ed4002a54f8263`, verified before 5.4 began. The final Phase 5.4 closeout collects all subphase commits and CI links.
