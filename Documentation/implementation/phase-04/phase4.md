@@ -4,7 +4,7 @@ Build showcase authoring/preview, explicit seller publication, and the published
 
 ## Progress and order
 
-- [ ] [4.1 · Property showcase store, preview, and publication transaction](phase4.1.md). Extend `estateflow_property` database grants, add authored showcase saving and seller preview read endpoints, and implement the atomic, idempotent `Publish` transaction with minimum-field and active-phone enforcement.
+- [x] [4.1 · Property showcase store, preview, and publication transaction](phase4.1.md). Extend `estateflow_property` database grants, add authored showcase saving and seller preview read endpoints, and implement the atomic, idempotent `Publish` transaction with minimum-field and active-phone enforcement.
 - [ ] [4.2 · Published listing read API for signed-in buyers](phase4.2.md). Expose `GET /published-listings/{listing_id}` behind `require_frontend_actor`, reading strictly from `property.current_publications` and `approved_for_public` facts, and verify isolation with PostgreSQL integration tests.
 - [ ] [4.3 · Seller preview, publication UI, and buyer listing page](phase4.3.md). Add the seller showcase fixture/editor, preview route, and publish controls in `/seller/workspace/[listingId]`, and build the Courtyard-House-styled buyer listing page at `/buyer/listings/[listingId]` with the resolved no-photo layout.
 - [ ] [4.4 · CI and end-to-end publication acceptance](phase4.4.md). Add Playwright full-stack acceptance checks across seller and buyer accounts and confirm local and CI checks pass before ticking Phase 4 in the roadmap.
