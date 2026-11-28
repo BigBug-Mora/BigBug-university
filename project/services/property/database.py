@@ -25,7 +25,7 @@ def transaction():
 
 
 def owned_listing(db, listing, seller, *, lock=False):
-    query = """SELECT id, current_draft_revision_id FROM property.listings
+    query = """SELECT id, current_draft_revision_id, current_showcase_id FROM property.listings
                WHERE id = %s AND seller_account_id = %s"""
     row = db.execute(query + (" FOR UPDATE" if lock else ""), (listing, seller)).fetchone()
     if row is None:

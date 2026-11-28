@@ -60,11 +60,17 @@ class Draft(Input):
     has_boundary_wall: StrictBool | None = None
     standard_fact_evidence: dict[str, Evidence] = Field(default_factory=dict)
     access_road_width: RoadWidth | None = None
+    access_road_width_approved_for_public: StrictBool | None = None
 
     @field_validator("standard_fact_evidence")
     @classmethod
     def dedicated_fields_only(cls, value):
-        if value.keys() - (cls.model_fields.keys() - {"standard_fact_evidence", "access_road_width"}):
+        excluded = {
+            "standard_fact_evidence",
+            "access_road_width",
+            "access_road_width_approved_for_public",
+        }
+        if value.keys() - (cls.model_fields.keys() - excluded):
             raise ValueError("Evidence requires a dedicated field")
         return value
 
@@ -78,3 +84,20 @@ class SaveDraft(Input):
     edit_action_id: UUID
     parent_revision_id: UUID
     draft: Draft
+
+
+class SaveShowcase(Input):
+    action_id: UUID
+    source_revision_id: UUID
+    parent_showcase_id: UUID | None = None
+    headline: Annotated[str, Field(min_length=1, max_length=240)]
+    description: Annotated[str, Field(min_length=1, max_length=5000)]
+    highlights: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(
+        min_length=1, max_length=12
+    )
+
+
+class PublishListing(Input):
+    action_id: UUID
+    listing_revision_id: UUID
+    showcase_id: UUID

@@ -121,6 +121,20 @@ def private_routes(require_actor):
     def retire(listing_id: UUID, detail_id: UUID, seller=actor):
         with transaction() as db:
             owned_listing(db, listing_id, seller.account_id, lock=True)
+            detail = db.execute(
+                "SELECT detail_kind,retired_at FROM property.private_details WHERE id=%s AND listing_id=%s",
+                (detail_id, listing_id),
+            ).fetchone()
+            if detail and detail["detail_kind"] == "phone" and detail["retired_at"] is None:
+                live = db.execute(
+                    "SELECT 1 FROM property.current_publications WHERE listing_id=%s", (listing_id,),
+                ).fetchone()
+                count = db.execute(
+                    """SELECT count(*) AS n FROM property.private_details
+                       WHERE listing_id=%s AND detail_kind='phone' AND retired_at IS NULL""", (listing_id,),
+                ).fetchone()["n"]
+                if live and count <= 1:
+                    raise HTTPException(422, "A published listing needs at least one active phone number.")
             row = db.execute(
                 """UPDATE property.private_details SET encrypted_value=NULL,encryption_key_ref=NULL,
                                 updated_at=coalesce(retired_at,now()),retired_at=coalesce(retired_at,now())

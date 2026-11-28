@@ -28,14 +28,21 @@ def revision(db, listing, revision_id):
 
 
 def list_owned(db, seller):
-    return db.execute(
-        """
-        SELECT l.id, r.property_type, r.town, r.district, r.revision_no
-        FROM property.listings l JOIN property.listing_revisions r ON r.id=l.current_draft_revision_id
-        WHERE l.seller_account_id=%s ORDER BY r.created_at DESC, l.id
-    """,
-        (seller,),
-    ).fetchall()
+    return jsonable_encoder(
+        db.execute(
+            """
+            SELECT l.id, r.property_type, r.town, r.district, r.revision_no,
+                   p.published_at, pr.revision_no AS published_revision_no
+            FROM property.listings l
+            JOIN property.listing_revisions r ON r.id=l.current_draft_revision_id
+            LEFT JOIN property.current_publications cp ON cp.listing_id=l.id
+            LEFT JOIN property.publications p ON p.id=cp.publication_id
+            LEFT JOIN property.listing_revisions pr ON pr.id=p.listing_revision_id
+            WHERE l.seller_account_id=%s ORDER BY r.created_at DESC, l.id
+        """,
+            (seller,),
+        ).fetchall()
+    )
 
 
 def create(db, seller, command):
@@ -80,7 +87,9 @@ def save(db, listing, seller, command):
 
 def write(db, listing, seller, action, parent, number, draft: Draft):
     revision_id = uuid4()
-    values = draft.model_dump(exclude={"access_road_width"})
+    values = draft.model_dump(
+        exclude={"access_road_width", "access_road_width_approved_for_public"}
+    )
     evidence = values.pop("standard_fact_evidence")
     for field, value in values.items():
         if value is not None:
@@ -104,6 +113,10 @@ def write(db, listing, seller, action, parent, number, draft: Draft):
     width = draft.access_road_width
     # Omission preserves the parent's link. Explicit null clears the width.
     replace_width = "access_road_width" in draft.model_fields_set
+    approval_set = (
+        "access_road_width_approved_for_public" in draft.model_fields_set
+        and draft.access_road_width_approved_for_public is not None
+    )
     if parent and replace_width and width:
         same = db.execute(
             """
@@ -123,14 +136,28 @@ def write(db, listing, seller, action, parent, number, draft: Draft):
         ).fetchone()
         replace_width = not same
     if parent:
-        db.execute(
-            """
-            INSERT INTO property.revision_facts
-            SELECT listing_id,%s,fact_key,fact_version_id,approved_for_public,approved_by,approved_at
-            FROM property.revision_facts WHERE revision_id=%s AND (NOT %s OR fact_key <> 'access_road_width')
-        """,
-            (revision_id, parent, replace_width),
-        )
+        if not replace_width and approval_set:
+            flag = bool(draft.access_road_width_approved_for_public)
+            db.execute(
+                """
+                INSERT INTO property.revision_facts
+                SELECT listing_id,%s,fact_key,fact_version_id,
+                       CASE WHEN fact_key='access_road_width' THEN %s ELSE approved_for_public END,
+                       CASE WHEN fact_key='access_road_width' THEN (CASE WHEN %s THEN %s ELSE NULL END) ELSE approved_by END,
+                       CASE WHEN fact_key='access_road_width' THEN (CASE WHEN %s THEN now() ELSE NULL END) ELSE approved_at END
+                FROM property.revision_facts WHERE revision_id=%s
+            """,
+                (revision_id, flag, flag, seller, flag, parent),
+            )
+        else:
+            db.execute(
+                """
+                INSERT INTO property.revision_facts
+                SELECT listing_id,%s,fact_key,fact_version_id,approved_for_public,approved_by,approved_at
+                FROM property.revision_facts WHERE revision_id=%s AND (NOT %s OR fact_key <> 'access_road_width')
+            """,
+                (revision_id, parent, replace_width),
+            )
     if replace_width and width:
         applicable = db.execute(
             """SELECT 1 FROM property.fact_applicability
@@ -159,10 +186,12 @@ def write(db, listing, seller, action, parent, number, draft: Draft):
                 listing,
             ),
         )
+        flag = bool(draft.access_road_width_approved_for_public) if approval_set else False
         db.execute(
-            """INSERT INTO property.revision_facts (listing_id,revision_id,fact_key,fact_version_id)
-                      VALUES (%s,%s,'access_road_width',%s)""",
-            (listing, revision_id, version),
+            """INSERT INTO property.revision_facts
+                      (listing_id,revision_id,fact_key,fact_version_id,approved_for_public,approved_by,approved_at)
+                      VALUES (%s,%s,'access_road_width',%s,%s,CASE WHEN %s THEN %s ELSE NULL END,CASE WHEN %s THEN now() ELSE NULL END)""",
+            (listing, revision_id, version, flag, flag, seller, flag),
         )
     db.execute(
         "UPDATE property.listings SET current_draft_revision_id=%s WHERE id=%s", (revision_id, listing)
