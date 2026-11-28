@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   foundation:
-    name: Database, identity, drafts and publication acceptance
+    name: Database, identity, publication and search acceptance
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -45,5 +45,5 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Run frontend, PostgreSQL 17 roles, identity, drafts and publication acceptance
+      - name: Run frontend, PostgreSQL 17 roles, identity, drafts, publication and search acceptance
         run: python project/tests/integration/identity_acceptance.py

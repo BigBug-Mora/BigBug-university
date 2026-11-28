@@ -1,4 +1,4 @@
-"""Run frontend, identity, draft and publication acceptance on a disposable stack."""
+"""Run frontend, identity, draft, publication and search acceptance on a disposable stack."""
 
 import os
 from pathlib import Path
