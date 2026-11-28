@@ -12,6 +12,7 @@ Save EstateFlow setup and test passwords in `.env.rds-admin` at the repository r
 | `RDS_MIGRATOR_PASSWORD` | Sign in as `estateflow_migrator` to apply reviewed migrations. |
 | `RDS_DEVELOPER_PASSWORD` | Sign in with your PostgreSQL developer login for the RDS smoke check. |
 | `RDS_ENGAGEMENT_PASSWORD` | Configure the scoped Engagement login for the Phase 2.4 stack. |
+| `RDS_PROPERTY_PASSWORD` | Configure the scoped Property login for Phase 3+. |
 | `COGNITO_SMOKE_BUYER_PASSWORD` or `COGNITO_SMOKE_SELLER_PASSWORD` | Sign in as your assigned buyer or seller in the Cognito smoke check. |
 
 Keep password values out of Markdown, screenshots, terminal output, and Git. AWS CLI session credentials stay in the named AWS profile.
@@ -174,3 +175,7 @@ Expect PostgreSQL 17, `estateflow_app`, and revision `0001` from the agreed RDS 
 ### Property runtime login
 
 After migration, run `infra/aws/provision-property-runtime.sql` once as the database administrator using the same TLS and psql procedure as Engagement. Set its password with `\password estateflow_property`. Run `infra/aws/grant-property-runtime.sql` as the migration owner. Configure Property with the resulting `ESTATEFLOW_PROPERTY_DATABASE_URL`. The role can append draft revisions and fact versions, advance the draft pointer and manage private detail slots.
+
+### Native WSL2 Docker Engine note
+
+When running Docker Engine directly inside WSL2 (without Docker Desktop), `192.168.65.254` is unavailable and Windows/Hyper-V firewall may block container traffic to a Windows-side SSM tunnel. Run `aws ssm start-session` inside WSL2, bridge Docker's `docker0` IP (`socat TCP-LISTEN:15432,bind=172.17.0.1,fork,reuseaddr TCP:127.0.0.1:15432 &`), and set `hostaddr=172.17.0.1` in `project/.env.identity`.

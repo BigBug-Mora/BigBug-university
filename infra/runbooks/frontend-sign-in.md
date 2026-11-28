@@ -60,7 +60,7 @@ To build the standalone frontend container, run `docker build -t estateflow-fron
 
 ## Run the identity stack with Compose
 
-From the repository root, copy `project/.env.identity.example` to `project/.env.identity`. Fill in the Cognito and Auth.js settings above and set `ESTATEFLOW_ENGAGEMENT_DATABASE_URL` to a connection string for the [scoped Engagement login](shared-aws-development.md#engagement-runtime-login) reachable from the Engagement container. Run the random-secret command above three times to generate separate values for Frontend → Engagement, Frontend → Property, and Property → Engagement. Compose supplies the same value to both ends of each connection.
+From the repository root, copy `project/.env.identity.example` to `project/.env.identity`. Fill in the Cognito and Auth.js settings above and set `ESTATEFLOW_ENGAGEMENT_DATABASE_URL` and `ESTATEFLOW_PROPERTY_DATABASE_URL` to connection strings for the [scoped Engagement login](shared-aws-development.md#engagement-runtime-login) and [scoped Property login](shared-aws-development.md#property-runtime-login) reachable from the containers. Also configure `ESTATEFLOW_PRIVATE_DETAIL_ACTIVE_KEY_REF` and `ESTATEFLOW_PRIVATE_DETAIL_KEYS` (Fernet key map for encrypted private details). Run the random-secret command above three times to generate separate values for Frontend → Engagement, Frontend → Property, and Property → Engagement. Compose supplies the same value to both ends of each connection.
 
 ```sh
 docker compose --env-file project/.env.identity -f project/compose.yaml --profile identity up --build --detach --wait
@@ -75,7 +75,7 @@ Phase 17 hosting requires private backend endpoints, encrypted transport with ce
 
 Use the dedicated confidential `estateflow-dev-authjs` client in the shared pool. Configure Cognito as its identity provider and enable the authorization-code grant with scope `openid`. Set the callback to `http://localhost:3000/api/auth/callback/cognito` and sign-out URL to `http://localhost:3000/`. On a Managed Login v2 domain, an app client created through the AWS CLI also requires Managed Login branding (`aws cognito-idp create-managed-login-branding --use-cognito-provided-values`), or `/login` will report that login pages are unavailable. The development client uses 60-minute access and ID tokens and a one-day refresh token. The application session has an eight-hour maximum and requests reauthentication when the Cognito access token expires.
 
-Open the [SSM tunnel and verify the database head](shared-aws-development.md#3-open-the-tunnel-bootstrap-roles-and-apply-migrations). Provision the [Engagement runtime login](shared-aws-development.md#engagement-runtime-login) and set up `project/.env.identity` as above. On Docker Desktop, resolve the host-side address from a Linux container while the tunnel is running.
+Open the [SSM tunnel and verify the database head](shared-aws-development.md#3-open-the-tunnel-bootstrap-roles-and-apply-migrations). Provision the [Engagement runtime login](shared-aws-development.md#engagement-runtime-login) and [Property runtime login](shared-aws-development.md#property-runtime-login), and set up `project/.env.identity` as above. On Docker Desktop, resolve the host-side address from a Linux container while the tunnel is running. On native WSL2 Docker Engine, see the [WSL2 note](shared-aws-development.md#native-wsl2-docker-engine-note).
 
 ```powershell
 docker run --rm postgres:17-bookworm getent ahostsv4 host.docker.internal
