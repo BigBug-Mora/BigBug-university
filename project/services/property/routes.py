@@ -1,10 +1,11 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
-from . import drafts, publication
+from . import drafts, publication, search
 from .database import owned_listing, transaction
-from .models import CreateDraft, PublishListing, SaveDraft, SaveShowcase
+from .models import CreateDraft, PublishListing, SaveDraft, SaveShowcase, SearchQuery
 from .private_details import private_routes
 
 
@@ -55,6 +56,11 @@ def listing_routes(require_frontend_actor):
 def published_routes(require_frontend_actor):
     router = APIRouter(prefix="/published-listings")
     actor = Depends(require_frontend_actor)
+
+    @router.get("")
+    def search_published(query: Annotated[SearchQuery, Query()], _buyer=actor):
+        with transaction() as db:
+            return search.search(db, query)
 
     @router.get("/{listing_id}")
     def get_published(listing_id: UUID, _buyer=actor):

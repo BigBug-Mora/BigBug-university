@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator, model_validator
 
 
 class Input(BaseModel):
@@ -101,3 +101,33 @@ class PublishListing(Input):
     action_id: UUID
     listing_revision_id: UUID
     showcase_id: UUID
+
+
+class SearchQuery(Input):
+    property_type: Literal["house", "apartment", "land"] | None = None
+    district: Annotated[str, Field(min_length=1, max_length=160)] | None = None
+    town: Annotated[str, Field(min_length=1, max_length=160)] | None = None
+    currency: Annotated[str, Field(pattern="^[A-Z]{3}$")] | None = None
+    min_price: Annotated[Decimal, Field(gt=0)] | None = None
+    max_price: Annotated[Decimal, Field(gt=0)] | None = None
+    min_bedrooms: Annotated[int, Field(ge=0)] | None = None
+    min_bathrooms: Annotated[int, Field(ge=0)] | None = None
+    min_land_area: Annotated[Decimal, Field(gt=0)] | None = None
+    land_area_unit: AreaUnit | None = None
+    min_floor_area: Annotated[Decimal, Field(gt=0)] | None = None
+    floor_area_unit: Literal["sq_ft", "sq_m"] | None = None
+    vehicle_access: Literal["any", "required", "confirmed", "none"] = "any"
+    limit: Annotated[int, Field(ge=1, le=50)] = 20
+    offset: Annotated[int, Field(ge=0, le=9223372036854775807)] = 0
+
+    @model_validator(mode="after")
+    def compatible_filters(self):
+        if (self.min_price is not None or self.max_price is not None) and self.currency is None:
+            raise ValueError("Price bounds require a currency")
+        if self.min_price is not None and self.max_price is not None and self.min_price > self.max_price:
+            raise ValueError("Minimum price must not exceed maximum price")
+        for minimum, unit in ((self.min_land_area, self.land_area_unit),
+                              (self.min_floor_area, self.floor_area_unit)):
+            if (minimum is None) != (unit is None):
+                raise ValueError("Minimum area and its unit must be supplied together")
+        return self
