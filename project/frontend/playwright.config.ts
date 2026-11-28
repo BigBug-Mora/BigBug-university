@@ -3,7 +3,7 @@ import { appEnvironment, appOrigin, fixtureOrigin, identityStack } from "./tests
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: identityStack ? "**/*-stack.spec.ts" : "**/sign-in.spec.ts",
+  testMatch: identityStack ? "**/*-stack.spec.ts" : ["**/sign-in.spec.ts", "**/search-navigation.spec.ts"],
   workers: 1,
   use: {
     ...devices["Desktop Chrome"],

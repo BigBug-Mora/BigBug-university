@@ -1,6 +1,7 @@
 import "server-only";
 import { propertySettings } from "./config";
 import { sessionToken } from "./session";
+import type { SearchResults } from "@/components/search/types";
 
 export type Result<T> =
   { ok: true; data: T } | { ok: false; status: number; message: string };
@@ -93,4 +94,9 @@ export function publishedPropertyRequest<T>(
     undefined,
     "Listing unavailable.",
   );
+}
+
+export function searchPublishedListings(params: URLSearchParams): Promise<Result<SearchResults>> {
+  const query = params.toString();
+  return callProperty<SearchResults>("/published-listings" + (query ? "?" + query : ""));
 }

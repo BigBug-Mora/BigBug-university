@@ -17,6 +17,14 @@ export function measurement(value: unknown, unit: unknown, approximate: unknown)
 
 export function money(value: unknown, currency: unknown) {
   if (value === null || value === undefined) return "Price not provided";
+  const text = String(value);
+  if (/^\d+(?:\.\d+)?$/.test(text)) {
+    const [whole, fraction = ""] = text.split(".");
+    const cents = BigInt(whole) * 100n + BigInt((fraction + "00").slice(0, 2))
+      + (Number(fraction[2] ?? 0) >= 5 ? 1n : 0n);
+    const tail = (cents % 100n).toString().padStart(2, "0").replace(/0+$/, "");
+    return `${scalar(currency)} ${new Intl.NumberFormat("en-LK").format(cents / 100n)}${tail ? "." + tail : ""}`;
+  }
   const number = Number(value);
   return `${scalar(currency)} ${Number.isFinite(number) ? new Intl.NumberFormat("en-LK", { maximumFractionDigits: 2 }).format(number) : scalar(value)}`;
 }

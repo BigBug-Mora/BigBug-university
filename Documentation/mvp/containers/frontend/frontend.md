@@ -30,3 +30,9 @@ Use server-side session handling for backend calls. Cognito, backend credentials
 Handle session expiration, forbidden access, missing listings, job failures, and network errors explicitly. Use the same action identifier when retrying an ambiguous submission so a refresh or double click does not create a second chat turn or request. Keep the active listing scope visible in Property Chat.
 
 Verify chat refresh, Back to Search, upload retry, preservation of the published listing while a showcase draft is reviewed, and private-detail access for two different buyers. Streaming versus a complete response, unfinished-turn indicators after refresh, and polling versus pushed status updates are open contracts.
+
+## Structured search and navigation
+
+Before Phase 11's natural-language search, `/buyer/search` provides structured GET filters against Property's authenticated `GET /published-listings` endpoint. Price bounds use the calculated total in an explicit currency; the frontend defaults a blank currency to LKR when a bound is entered. Minimum land/floor areas retain their entered units and Property normalizes them. Unknown vehicle access stays explicit, and required-access results include it after confirmed matches.
+
+The search URL owns filter and pagination state. Result links carry the allowlisted query string as one encoded `search` parameter; listing pages reconstruct a relative **Back to Search** URL. Sign-in preserves the same validated search/listing context. Reject unsupported keys, duplicate parameters, control characters and oversized navigation values rather than accepting arbitrary destinations. Property remains responsible for domain filter validation. Returning reruns the same criteria against current published data with `no-store`, preserving filters and matching results without retaining a stale response cache.

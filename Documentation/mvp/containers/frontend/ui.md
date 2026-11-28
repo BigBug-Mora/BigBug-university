@@ -27,4 +27,8 @@ Use shared CSS variables to apply the palette to both shadcn/ui controls and Tai
 
 When the published gallery is empty, use an architectural typographic header card with the property type, town/district, Instrument Serif headline, asking price and a muted **No photos published yet** note. Use a `#E2DFCF` light / `#343B2F` dark surface with a hairline border. Omit cover, photo story and gallery containers; continue with metrics, highlights, description and public facts. Do not substitute stock photos or render empty image placeholders. Seller preview uses the same presentation with a clearly marked unpublished-preview banner.
 
+## Structured search
+
+Use compact, labeled filter groups above a two-column desktop card grid, stacking filters and cards on narrow screens. Cards have consistent typographic no-photo headers, headline/location, asking price, measurements and a textual vehicle-access badge: **Confirmed**, **No vehicle access**, or **Unknown — needs confirmation**. Land sold per unit shows both the entered rate and the calculated total, labeled **Approximate total** when its source area is approximate. Preserve zero and unknown counts distinctly. Keep pagination, empty results, validation feedback and **Clear filters** visible and keyboard accessible.
+
 See the [frontend spec](frontend.md) for screen behavior and the [MVP tech stack](../../teach-stack/tech-stack.md#1-technology-stack) for tooling.

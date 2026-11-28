@@ -1,4 +1,5 @@
 import "server-only";
+import { buyerReturnPath } from "@/lib/search-navigation";
 
 export const buyerSearch = "/buyer/search";
 export const sellerWorkspace = "/seller/workspace";
@@ -10,6 +11,8 @@ export function listingPath(id: string): string | undefined {
 export function returnDestination(value: unknown, origin: string): string {
   if (typeof value !== "string") return buyerSearch;
   const path = value.startsWith(`${origin}/`) ? value.slice(origin.length) : value;
+  const buyerPath = buyerReturnPath(path);
+  if (buyerPath) return buyerPath;
   if (path === sellerWorkspace || path === buyerSearch) return path;
   if (/^\/seller\/workspace\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}(?:\/preview)?$/i.test(path)) return path;
   const id = path.startsWith("/buyer/listings/") ? path.slice("/buyer/listings/".length) : "";
