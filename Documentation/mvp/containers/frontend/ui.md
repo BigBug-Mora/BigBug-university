@@ -23,4 +23,8 @@ Use shared CSS variables to apply the palette to both shadcn/ui controls and Tai
 - Make search results easy to scan with consistent photo proportions and predictable placement of price, location, and key facts.
 - Label controls, keep keyboard focus visible, and pair status colors with text.
 
+## Listings without photos
+
+When the published gallery is empty, use an architectural typographic header card with the property type, town/district, Instrument Serif headline, asking price and a muted **No photos published yet** note. Use a `#E2DFCF` light / `#343B2F` dark surface with a hairline border. Omit cover, photo story and gallery containers; continue with metrics, highlights, description and public facts. Do not substitute stock photos or render empty image placeholders. Seller preview uses the same presentation with a clearly marked unpublished-preview banner.
+
 See the [frontend spec](frontend.md) for screen behavior and the [MVP tech stack](../../teach-stack/tech-stack.md#1-technology-stack) for tooling.

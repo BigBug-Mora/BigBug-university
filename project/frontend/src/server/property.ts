@@ -13,10 +13,12 @@ const errors: Record<number, string> = {
   422: "Check the field values, related counts, prices and units.",
 };
 
-export async function propertyRequest<T>(
+async function callProperty<T>(
   path: string,
   method = "GET",
   body?: unknown,
+  notFoundMessage = errors[404],
+  forwardDetail = false,
 ): Promise<Result<T>> {
   const session = await sessionToken();
   if (
@@ -28,7 +30,7 @@ export async function propertyRequest<T>(
   }
   try {
     const { origin, serviceToken } = propertySettings();
-    const response = await fetch(origin + "/listings" + path, {
+    const response = await fetch(origin + path, {
       method,
       cache: "no-store",
       redirect: "error",
@@ -46,9 +48,17 @@ export async function propertyRequest<T>(
         data: response.status === 204 ? null : await response.json(),
       };
     let message =
-      errors[response.status] ?? "Property service unavailable. Try again.";
+      response.status === 404
+        ? notFoundMessage
+        : (errors[response.status] ?? "Property service unavailable. Try again.");
     if (response.status === 409 && path.includes("/private-details/"))
       message = "This phone number already occupies another slot.";
+    if (forwardDetail && (response.status === 409 || response.status === 422)) {
+      const payload = await response.json().catch(() => null);
+      if (typeof payload?.detail === "string" && payload.detail.trim()) {
+        message = payload.detail;
+      }
+    }
     return { ok: false, status: response.status, message };
   } catch {
     return {
@@ -57,4 +67,30 @@ export async function propertyRequest<T>(
       message: "The service could not confirm the request. Try again.",
     };
   }
+}
+
+export function propertyRequest<T>(
+  path: string,
+  method = "GET",
+  body?: unknown,
+  forwardDetail = false,
+): Promise<Result<T>> {
+  return callProperty<T>(
+    "/listings" + path,
+    method,
+    body,
+    errors[404],
+    forwardDetail,
+  );
+}
+
+export function publishedPropertyRequest<T>(
+  listingId: string,
+): Promise<Result<T>> {
+  return callProperty<T>(
+    "/published-listings/" + listingId,
+    "GET",
+    undefined,
+    "Listing unavailable.",
+  );
 }

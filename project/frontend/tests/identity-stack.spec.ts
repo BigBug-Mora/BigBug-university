@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { fixtureOrigin, propertyToken } from "./fixture-settings.mjs";
 
-const listing = "/buyer/listings/courtyard-house";
+const listing = "/buyer/search";
 const property = "http://127.0.0.1:8000";
 const uuid = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/;
 
@@ -59,13 +59,13 @@ test("the Compose images resolve browser identities and enforce current account 
     expect(await denied.json()).toEqual({ detail: "Unauthorized" });
   }
 
-  const buyer = await signIn(page, listing, "Listing courtyard-house");
+  const buyer = await signIn(page, listing, "Buyer search");
   const refresh = await page.reload();
   expect(refresh?.headers()["cache-control"]).toContain("no-store");
   await expect(page.getByText(buyer)).toBeVisible();
   expect(await (await page.request.get("/api/auth/session")).json()).toEqual({ expires: expect.any(String) });
   await signOut(page);
-  expect(await signIn(page, listing, "Listing courtyard-house")).toBe(buyer);
+  expect(await signIn(page, listing, "Buyer search")).toBe(buyer);
   await signOut(page);
   const seller = await signIn(page, "/seller/workspace", "Seller workspace", true);
   expect(seller).not.toBe(buyer);
@@ -81,7 +81,15 @@ test("the Compose images resolve browser identities and enforce current account 
   await page.reload();
   await expect(page.getByText(seller)).toBeVisible();
   compose("stop", "--timeout", "5", "engagement-service");
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "Service temporarily unavailable" })).toBeVisible();
-  await expect(page.getByText(seller)).toHaveCount(0);
+  try {
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Service temporarily unavailable" })).toBeVisible();
+    await expect(page.getByText(seller)).toHaveCount(0);
+  } finally {
+    compose("up", "-d", "--wait", "engagement-service");
+    await expect(async () => {
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "Seller workspace" })).toBeVisible();
+    }).toPass({ timeout: 15000 });
+  }
 });

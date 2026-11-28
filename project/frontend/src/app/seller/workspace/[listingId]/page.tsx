@@ -3,6 +3,8 @@ import { protectedAccount } from "@/server/session";
 import { propertyRequest } from "@/server/property";
 import { Editor, type Revision, type Width } from "./editor";
 import { Details, type Detail } from "./details";
+import type { PreviewState } from "@/components/listing-types";
+import { ShowcaseEditor } from "./showcase-editor";
 
 export default async function ListingPage({
   params,
@@ -21,12 +23,13 @@ export default async function ListingPage({
           : "Service temporarily unavailable"}
       </h1>
     );
-  const [draft, details] = await Promise.all([
+  const [draft, details, preview] = await Promise.all([
     propertyRequest<{
       revision: Revision;
       facts: (Width & { fact_key: string })[];
     }>("/" + listingId),
     propertyRequest<Detail[]>("/" + listingId + "/private-details"),
+    propertyRequest<PreviewState>("/" + listingId + "/showcase"),
   ]);
   return (
     <div className="workspace">
@@ -48,6 +51,7 @@ export default async function ListingPage({
           ) : (
             <p role="alert">{details.message}</p>
           )}
+          {preview.ok ? <ShowcaseEditor state={preview.data} /> : <p role="alert">{preview.message}</p>}
         </>
       )}
     </div>

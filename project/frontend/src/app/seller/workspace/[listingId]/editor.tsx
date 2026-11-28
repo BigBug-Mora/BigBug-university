@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { saveDraft } from "../actions";
 import { actionId, Feedback, useSubmission } from "../submission";
 
@@ -12,6 +13,7 @@ export type Revision = {
   standard_fact_evidence: Record<string, unknown>;
 } & Record<string, unknown>;
 export type Width = {
+  approved_for_public?: boolean;
   number_value: string;
   unit: string;
   approximate: boolean | null;
@@ -64,6 +66,7 @@ export function Editor({
   const [number, setNumber] = useState(revision.revision_no);
   const [basis, setBasis] = useState(String(revision.price_basis ?? ""));
   const submit = useSubmission();
+  const router = useRouter();
   function field(
     key: string,
     options?: string[],
@@ -115,9 +118,11 @@ export function Editor({
             const fields: Record<string, unknown> = {
               property_type: type,
               standard_fact_evidence: revision.standard_fact_evidence,
+              access_road_width_approved_for_public: data.has("access_road_width_approved_for_public"),
             };
             const road: Record<string, Scalar> = {};
             for (const [key, raw] of data) {
+              if (key === "access_road_width_approved_for_public") continue;
               const text = String(raw).trim();
               let value: Scalar = text || null;
               if (text && counts.includes(key)) value = Number(text);
@@ -141,6 +146,7 @@ export function Editor({
             setParent(result.data.revision.id);
             setNumber(result.data.revision.revision_no);
             submit.setMessage("Draft saved.");
+            router.refresh();
           });
         }}
       >
@@ -177,6 +183,7 @@ export function Editor({
           {field("road_unit", ["ft", "m"], false, width?.unit)}
           {field("road_approximate", tri, false, width?.approximate)}
           {field("road_qualifier", undefined, false, width?.qualifier)}
+          <label className="checkbox-label"><input name="access_road_width_approved_for_public" type="checkbox" defaultChecked={width?.approved_for_public ?? false} />Show access road width on the published page</label>
         </fieldset>
         <fieldset>
           <legend>Property features</legend>

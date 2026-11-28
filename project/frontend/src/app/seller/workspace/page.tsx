@@ -11,6 +11,7 @@ type Listing = {
   town: string | null;
   district: string | null;
   revision_no: number;
+  published_revision_no: number | null;
 };
 
 export default async function SellerPage() {
@@ -46,6 +47,7 @@ export default async function SellerPage() {
                   {row.property_type} ·{" "}
                   {row.town ?? row.district ?? "Location unknown"} · Revision{" "}
                   {row.revision_no}
+                  {row.published_revision_no ? ` · Published revision ${row.published_revision_no}` : " · Not published"}
                 </Link>
               </li>
             ))}

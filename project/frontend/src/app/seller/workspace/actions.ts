@@ -57,5 +57,63 @@ export async function removeDetail(listing: string, detail: string) {
   return propertyRequest<null>(
     `/${listing}/private-details/${detail}`,
     "DELETE",
+    undefined,
+    true,
   );
+}
+
+export async function saveShowcase(
+  listing: string,
+  payload: {
+    action_id: string;
+    source_revision_id: string;
+    parent_showcase_id?: string | null;
+    headline: string;
+    description: string;
+    highlights: string[];
+  },
+) {
+  if (!id.test(listing) || !id.test(payload.source_revision_id)) return invalid;
+  const result = await propertyRequest<Record<string, unknown>>(
+    `/${listing}/showcases`,
+    "POST",
+    payload,
+    true,
+  );
+  if (result.ok) {
+    revalidatePath(`/seller/workspace/${listing}`);
+    revalidatePath(`/seller/workspace/${listing}/preview`);
+  }
+  return result;
+}
+
+export async function publishListing(
+  listing: string,
+  payload: {
+    action_id: string;
+    listing_revision_id: string;
+    showcase_id: string;
+  },
+) {
+  if (
+    !id.test(listing) ||
+    !id.test(payload.listing_revision_id) ||
+    !id.test(payload.showcase_id)
+  )
+    return invalid;
+  const result = await propertyRequest<{
+    publication_id: string;
+    listing_id: string;
+    listing_revision_id: string;
+    revision_no: number;
+    showcase_id: string;
+    published_at: string;
+  }>(`/${listing}/publish`, "POST", payload, true);
+  if (result.ok) {
+    revalidatePath("/seller/workspace");
+    revalidatePath(`/seller/workspace/${listing}`);
+    revalidatePath(`/seller/workspace/${listing}/preview`);
+    revalidatePath(`/buyer/listings/${listing}`);
+  }
+  return result;
 }

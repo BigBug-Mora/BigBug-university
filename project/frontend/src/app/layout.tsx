@@ -14,7 +14,7 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
         <header className="site-header">
           <Link href="/">EstateFlow</Link>
         </header>
-        <main className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">{children}</main>
+        <main className="mx-auto w-full max-w-5xl px-6 py-14 sm:py-20">{children}</main>
       </body>
     </html>
   );
