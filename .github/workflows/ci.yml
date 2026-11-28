@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   foundation:
-    name: Database, identity and seller draft acceptance
+    name: Database, identity, drafts and publication acceptance
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -37,17 +37,13 @@ jobs:
           cache: npm
           cache-dependency-path: project/frontend/package-lock.json
 
-      - name: Run frontend fixture checks
+      - name: Install frontend dependencies and Chromium
         working-directory: project/frontend
         env:
           NEXT_TELEMETRY_DISABLED: '1'
         run: |
           npm ci
           npx playwright install --with-deps chromium
-          npm run lint
-          npm run build
-          npm run typecheck
-          npm run test:e2e
 
-      - name: Run PostgreSQL 17 role, draft, private-detail and Compose browser acceptance
+      - name: Run frontend, PostgreSQL 17 roles, identity, drafts and publication acceptance
         run: python project/tests/integration/identity_acceptance.py

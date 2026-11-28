@@ -25,3 +25,11 @@ Verify the complete Phase 4 seller-to-buyer publication flow across two authenti
 ## Evidence
 
 *(To be recorded after final verification runs.)*
+
+## Implementation decisions
+
+- `publication-stack.spec.ts` uses separate seller and buyer browser contexts. Seller creation, fact edits, phone saving, showcase authoring, preview and both publications run through the UI. Authenticated API probes verify the exact stale-pair `409`, original published snapshot, new revision/showcase IDs, unpublished `404`, unauthenticated `401`, and malformed-ID `422`.
+- Fixture credentials and browser sign-in assertions live in `tests/stack-identity.ts`, shared with the existing draft acceptance test. The original standalone `sign-in.spec.ts` remains unchanged; the real stack also verifies that `courtyard-house` cannot resolve as a listing.
+- `identity_acceptance.py` is now the complete local and CI gate: lint → production build → typecheck → standalone OIDC tests → disposable PostgreSQL 17 migrations/grants and both service suites → Compose browser tests. The standalone subprocess explicitly uses `ESTATEFLOW_TEST_IDENTITY_STACK=0`; full-stack tests retain `1`. CI installs dependencies/Chromium and calls this runner once.
+- Browser subprocess timeouts are bounded at 180 seconds for standalone checks and 240 seconds for the expanded Compose suite. Fixture browser actions have short timeouts, so a missing control fails at the affected step.
+- Acceptance review found that a normal draft-form round trip expands omitted evidence metadata to explicit nulls. Publication now treats omitted and null optional metadata identically when comparing dedicated-field evidence, preserving independent chat corrections on unrelated edits. The existing PostgreSQL reconciliation regression now exercises the actual editor payload shape. This is a correction to the Phase 4.1 contract discovered during final acceptance, not an additional workflow.

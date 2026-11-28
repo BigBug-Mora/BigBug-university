@@ -12,7 +12,10 @@ def approved(db, revision):
 
 
 def field_value(revision, key):
-    return revision[key], revision["standard_fact_evidence"].get(key)
+    evidence = revision["standard_fact_evidence"].get(key) or {}
+    # Form round trips expand omitted optional metadata to null. Neither changes
+    # the evidence reviewed by the seller or supersedes an independent answer.
+    return revision[key], {name: value for name, value in evidence.items() if value is not None}
 
 
 def reconcile(db, listing, outgoing_id, incoming):

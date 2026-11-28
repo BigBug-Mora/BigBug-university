@@ -1,57 +1,8 @@
-import { createHash, randomUUID } from "node:crypto";
-import { expect, test, type APIRequestContext } from "@playwright/test";
-import {
-  callbackUrl,
-  clientId,
-  clientSecret,
-  propertyToken,
-} from "./fixture-settings.mjs";
+import { randomUUID } from "node:crypto";
+import { expect, test } from "@playwright/test";
+import { propertyCredentials as credentials } from "./stack-identity";
 
-const provider = "http://127.0.0.1:47121";
 const property = "http://127.0.0.1:8000/listings";
-
-async function credentials(request: APIRequestContext, identity: string) {
-  const verifier = randomUUID() + randomUUID();
-  const login = await request.get(provider + "/authorize", {
-    params: {
-      client_id: clientId,
-      redirect_uri: callbackUrl,
-      scope: "openid",
-      response_type: "code",
-      prompt: "login",
-      code_challenge_method: "S256",
-      code_challenge: createHash("sha256").update(verifier).digest("base64url"),
-      state: randomUUID(),
-      nonce: randomUUID(),
-    },
-  });
-  const id = /finish\?id=([a-f0-9-]+)/.exec(await login.text())?.[1];
-  if (!id) throw new Error("Fixture authorization unavailable");
-  const approved = await request.get(provider + "/finish", {
-    params: { id, approve: "1", identity },
-    maxRedirects: 0,
-  });
-  const code = new URL(approved.headers().location).searchParams.get("code")!;
-  const token = await request.post(provider + "/token", {
-    headers: {
-      Authorization:
-        "Basic " +
-        Buffer.from(clientId + ":" + clientSecret).toString("base64"),
-    },
-    form: {
-      code,
-      code_verifier: verifier,
-      grant_type: "authorization_code",
-      redirect_uri: callbackUrl,
-    },
-  });
-  expect(token.ok()).toBeTruthy();
-  return {
-    Authorization: "Bearer " + (await token.json()).access_token,
-    "X-EstateFlow-Service-Token": propertyToken,
-  };
-}
-
 test("seller reopens drafts, retries revisions and retires private details across account boundaries", async ({
   page,
   request,

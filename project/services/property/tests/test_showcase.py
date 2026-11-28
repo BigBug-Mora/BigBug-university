@@ -169,7 +169,12 @@ class ShowcaseTests(ShowcaseCase):
             """INSERT INTO property.buyer_visible_facts (listing_id,fact_key,field_revision_id)
                VALUES (%s,'covered_parking_spaces',%s)""", (first["listing_id"], correction["revision"]["id"]),
         )
-        unrelated = self.edit(path, correction, command["draft"] | {"entered_price": "200000"})
+        unrelated = self.edit(path, correction, command["draft"] | {
+            "entered_price": "200000",
+            # The actual editor sends saved evidence back through the typed Draft
+            # model, which expands omitted qualifier/approximate keys to null.
+            "standard_fact_evidence": {"covered_parking_spaces": {"source_kind": "seller"}},
+        })
         _, authored = self.author(unrelated, authored["id"])
         self.assertEqual(self.publish(unrelated, authored).status_code, 200)
         self.assertIsNotNone(self.db.execute("SELECT 1 FROM property.buyer_visible_facts WHERE listing_id=%s",

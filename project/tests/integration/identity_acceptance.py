@@ -1,4 +1,4 @@
-"""Run identity and seller draft acceptance on a clean, disposable Compose stack."""
+"""Run frontend, identity, draft and publication acceptance on a disposable stack."""
 
 import os
 from pathlib import Path
@@ -38,9 +38,9 @@ TEST_SETTINGS = {
 }
 
 
-def run(*args, cwd=ROOT, stdin=None, check=True, timeout=120):
+def run(*args, cwd=ROOT, stdin=None, check=True, timeout=120, environment=None):
     return subprocess.run(
-        args, cwd=cwd, env=os.environ | TEST_SETTINGS,
+        args, cwd=cwd, env=os.environ | TEST_SETTINGS | (environment or {}),
         stdin=stdin, check=check, timeout=timeout,
     )
 
@@ -72,6 +72,9 @@ def main():
     npm = ("cmd.exe", "/d", "/c", "npm.cmd") if os.name == "nt" else ("npm",)
     try:
         run(*COMPOSE, "down", "--timeout", "5")
+        for script in ("lint", "build", "typecheck", "test:e2e"):
+            run(*npm, "run", script, cwd=FRONTEND, timeout=180,
+                environment={"ESTATEFLOW_TEST_IDENTITY_STACK": "0", "NEXT_TELEMETRY_DISABLED": "1"})
         run(*COMPOSE, "up", "-d", "--wait", "db")
         run(python, "-m", "alembic", "-c", "project/alembic.ini", "upgrade", "head")
         psql("postgres", script="provision-engagement-runtime.sql")
@@ -90,7 +93,7 @@ def main():
                 "-s", f"project/services/{service}/tests", "-v")
         run(*COMPOSE, "up", "--build", "-d", "--wait", timeout=600)
         wait_for_frontend()
-        run(*npm, "run", "test:e2e", cwd=FRONTEND)
+        run(*npm, "run", "test:e2e", cwd=FRONTEND, timeout=240)
     except Exception:
         run(*COMPOSE, "logs", "--no-color", "--tail", "80", check=False, timeout=20)
         raise
