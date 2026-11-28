@@ -7,7 +7,7 @@ Build showcase authoring/preview, explicit seller publication, and the published
 - [x] [4.1 · Property showcase store, preview, and publication transaction](phase4.1.md). Extend `estateflow_property` database grants, add authored showcase saving and seller preview read endpoints, and implement the atomic, idempotent `Publish` transaction with minimum-field and active-phone enforcement.
 - [x] [4.2 · Published listing read API for signed-in buyers](phase4.2.md). Expose `GET /published-listings/{listing_id}` behind `require_frontend_actor`, reading strictly from `property.current_publications` and `approved_for_public` facts, and verify isolation with PostgreSQL integration tests.
 - [x] [4.3 · Seller preview, publication UI, and buyer listing page](phase4.3.md). Add the seller showcase fixture/editor, preview route, and publish controls in `/seller/workspace/[listingId]`, and build the Courtyard-House-styled buyer listing page at `/buyer/listings/[listingId]` with the resolved no-photo layout.
-- [ ] [4.4 · CI and end-to-end publication acceptance](phase4.4.md). Add Playwright full-stack acceptance checks across seller and buyer accounts and confirm local and CI checks pass before ticking Phase 4 in the roadmap.
+- [x] [4.4 · CI and end-to-end publication acceptance](phase4.4.md). Add Playwright full-stack acceptance checks across seller and buyer accounts and confirm local and CI checks pass before ticking Phase 4 in the roadmap.
 
 ## Scope and ownership
 
@@ -39,4 +39,10 @@ Use the existing PostgreSQL 17 schema (`0001_initial_schema.sql`), Phase 2 actor
 ## Downstream handoff
 
 Phase 5 queries `property.public_listings` for structured buyer search and links search results to `/buyer/listings/[listingId]` with Back to Search state. Phase 6 populates `property.photos`, `property.revision_photos`, `property.showcase_photos`, and `property.showcase_featured_photos` so the shared showcase view renders real S3 photos alongside the no-photo fallback. Phase 9 populates `property.showcase_revisions` from `agent-worker` jobs with `source_job_id` set, using the same preview and publish pipeline.
+
+## Completion evidence
+
+Completed **2026-11-28 (Asia/Colombo)**. Final implementation: `962e630f53b0cfc045ba29af4fa71ddd7ef5464a`; verified CI head: `17515e9069ce55d66e74b431045d628c9a0e9d4e`. [Successful CI](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46139424367) · [Exact commands, counts and sequential commit record](phase4.4.md#evidence).
+
+`python project/tests/integration/identity_acceptance.py` passed frontend lint/build/typecheck, **11 standalone OIDC tests**, **26 scoped PostgreSQL 17 Property tests**, **9 Engagement tests**, and **5 full-stack browser tests**. The real seller-to-buyer flow proved that a private price edit remains hidden, a stale pair returns `409`, and publishing the updated pair advances the buyer's price. Unpublished `404`, strict stack UUID validation, no-store responses, phone invariants, fact approval/reconciliation, and desktop/mobile no-photo rendering were verified. All four subphases were committed and pushed sequentially before this completion gate.
 

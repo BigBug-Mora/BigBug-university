@@ -13,8 +13,8 @@ Verify the complete Phase 4 seller-to-buyer publication flow across two authenti
   - Seller saves a private draft price edit without re-publishing; buyer reloads `/buyer/listings/{listingId}` and still sees the **original** published price.
   - Seller cannot publish the new revision with the stale showcase (`409` feedback); after saving an updated showcase for the new revision and publishing the updated pair, buyer reloads and sees the **updated** price.
   - Draft-only (unpublished) listing returns unavailable (`404`) when requested by the buyer.
-- [ ] Verify `project/tests/integration/identity_acceptance.py` and `.github/workflows/ci.yml` execute all Phase 4 Property tests, Frontend static checks, standalone Playwright checks, and full-stack Playwright checks cleanly.
-- [ ] Record exact commands, Git revision, date, and observed results in **Evidence** below before ticking Phase 4 in [roadmap.md](../roadmap.md).
+- [x] Verify `project/tests/integration/identity_acceptance.py` and `.github/workflows/ci.yml` execute all Phase 4 Property tests, Frontend static checks, standalone Playwright checks, and full-stack Playwright checks cleanly.
+- [x] Record exact commands, Git revision, date, and observed results in **Evidence** below before ticking Phase 4 in [roadmap.md](../roadmap.md).
 
 ## Acceptance check
 
@@ -32,19 +32,21 @@ The complete local gate ran from `/home/sandaru/estateflow-phase04` using Ubuntu
 python project/tests/integration/identity_acceptance.py
 ```
 
-That runner executes these commands, in this order, with standalone fixture mode isolated from the real stack:
+That runner executes these commands, in this order, with standalone fixture mode isolated from the real stack. Frontend commands run with `project/frontend` as the working directory (equivalent to `npm --prefix project/frontend run ...` from the root):
 
 ```sh
-npm --prefix project/frontend run lint
-npm --prefix project/frontend run build
-npm --prefix project/frontend run typecheck
-npm --prefix project/frontend run test:e2e
+# cwd: project/frontend; ESTATEFLOW_TEST_IDENTITY_STACK=0
+npm run lint
+npm run build
+npm run typecheck
+npm run test:e2e
+# cwd: repository root
 python -m alembic -c project/alembic.ini upgrade head
 python -m alembic -c project/alembic.ini current --check-heads
 python -W error::ResourceWarning -m unittest discover -s project/services/property/tests -v
 python -W error::ResourceWarning -m unittest discover -s project/services/engagement/tests -v
-# After Compose builds and starts all five services, with ESTATEFLOW_TEST_IDENTITY_STACK=1:
-npm --prefix project/frontend run test:e2e
+# cwd: project/frontend, after Compose starts all five services; ESTATEFLOW_TEST_IDENTITY_STACK=1
+npm run test:e2e
 ```
 
 The runner additionally provisions both scoped runtime logins, applies `infra/aws/grant-property-runtime.sql` as the migrator, loads fictional fixtures, and runs schema assertions before the service suites. It exited **0** and removed its disposable containers/network.
@@ -59,7 +61,20 @@ The runner additionally provisions both scoped runtime logins, applies `infra/aw
 
 The publication lifecycle used a seller browser to publish **LKR 15,000,000**, a separate unauthenticated buyer browser to sign in and resume that exact UUID listing, a private seller edit to **LKR 18,000,000**, buyer refresh/API checks retaining the original snapshot, explicit stale-pair **409** (API and UI), updated showcase preview/publication, and buyer refresh showing the new price and headline. The second publication test verified **401**, unpublished **404**, malformed-ID **422**, no-store headers, and rejection of the standalone slug by the real frontend stack. Published pages contained no image elements or private phone values.
 
-GitHub Actions verification: **pending the pushed Phase 4.4 revision**. Phase 4 completion and the roadmap checkbox remain open until CI succeeds.
+GitHub Actions verification: **passed** on **2026-11-28 (Asia/Colombo)** at evidence revision **`17515e9069ce55d66e74b431045d628c9a0e9d4e`**, which contains implementation revision `962e630f53b0cfc045ba29af4fa71ddd7ef5464a`. [Successful Phase 4.4 run](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46139424367). The GitHub API confirmed `status=completed`, `conclusion=success` and the exact head SHA before completion checkboxes were ticked. The same complete acceptance runner executed in CI on Ubuntu 24.04 with Python 3.14 and Node 24. All Phase 4 acceptance requirements are complete; the phase plan and roadmap were checked only after this local-plus-CI gate.
+
+## Sequential commit and CI record
+
+The initial planning files were committed and pushed as `494b1bf` before subphase implementation. Each subphase's implementation and evidence commits were pushed before starting the next subphase.
+
+| Subphase | Implementation commit | Evidence commit | Local Property / Engagement / standalone / stack counts | Verified CI |
+| --- | --- | --- | --- | --- |
+| 4.1 | `e56503d` | `4dec0e5` | 21 / 9 / 11 / 2 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46136668113) |
+| 4.2 | `27041a4` | `7dd4088` | 26 / 9 / 11 / 2 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46137090420) |
+| 4.3 | `10aeb9e` | `8ef34ba` | 26 / 9 / 11 / 3 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46138700823) |
+| 4.4 | `962e630` | `17515e9` | 26 / 9 / 11 / 5 | [Passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46139424367) |
+
+Frontend lint, production build and typecheck passed in every subphase. This final documentation/roadmap completion update is committed and pushed separately after verification.
 
 ## Implementation decisions
 
