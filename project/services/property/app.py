@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from project.services.property.actor import NO_STORE, Actor, ActorAuthentication
 from project.services.property.engagement import EngagementResolver
-from project.services.property.routes import listing_routes
+from project.services.property.routes import listing_routes, published_routes
 from project.shared.cognito import CognitoVerifier
 from project.shared.service_auth import ServiceAuthenticator
 
@@ -24,7 +24,7 @@ def build_app(authentication: ActorAuthentication | None = None) -> FastAPI:
     @app.middleware("http")
     async def draft_cache_policy(request: Request, call_next):
         response = await call_next(request)
-        if request.url.path.split("/", 2)[1:2] == ["listings"]:
+        if request.url.path.split("/", 2)[1:2] in (["listings"], ["published-listings"]):
             response.headers.update(NO_STORE)
         return response
 
@@ -52,6 +52,7 @@ def build_app(authentication: ActorAuthentication | None = None) -> FastAPI:
         return AccountIdentity(account_id=actor.account_id)
 
     app.include_router(listing_routes(require_frontend_actor))
+    app.include_router(published_routes(require_frontend_actor))
     return app
 
 

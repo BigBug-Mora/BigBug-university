@@ -50,3 +50,15 @@ def listing_routes(require_frontend_actor):
 
     router.include_router(private_routes(require_frontend_actor))
     return router
+
+
+def published_routes(require_frontend_actor):
+    router = APIRouter(prefix="/published-listings")
+    actor = Depends(require_frontend_actor)
+
+    @router.get("/{listing_id}")
+    def get_published(listing_id: UUID, _buyer=actor):
+        with transaction() as db:
+            return publication.published_listing(db, listing_id)
+
+    return router

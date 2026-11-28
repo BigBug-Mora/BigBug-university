@@ -10,10 +10,15 @@ from psycopg.types.json import Jsonb
 from . import drafts
 from .database import owned_listing
 from .publication_facts import reconcile
+from .published import read as read_published
 
 
 def encode(value):
     return jsonable_encoder(value, custom_encoder={Decimal: str})
+
+
+def published_listing(db, listing):
+    return encode(read_published(db, listing))
 
 
 def showcase(db, listing, showcase_id):
