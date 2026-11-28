@@ -6,7 +6,7 @@ Verify the complete Phase 5 structured search and Back-to-Search workflow across
 
 ## Progress
 
-- [ ] Add `project/frontend/tests/search-stack.spec.ts` running against the full local Compose stack (`frontend` + `property-service` + `engagement-service` + PostgreSQL 17 + `identity-fixture`):
+- [x] Add `project/frontend/tests/search-stack.spec.ts` running against the full local Compose stack (`frontend` + `property-service` + `engagement-service` + PostgreSQL 17 + `identity-fixture`):
   - Seller API/UI publishes representative listings distinguishing:
     1. `land` with `per_unit` pricing (`250000 LKR / perch`, `0.125 acre` = `5,000,000 LKR` calculated total, `land_area_approximate = true`) and `vehicle_access = true` (confirmed).
     2. `house` with `vehicle_access = false` (explicitly no vehicle access), `bedroom_count = 0`, `parking_spaces = 0`.
@@ -28,4 +28,49 @@ Verify the complete Phase 5 structured search and Back-to-Search workflow across
 
 ## Evidence
 
-*(To be recorded after verification runs.)*
+Local verification date: **2026-11-28 (Asia/Colombo)**. Implementation revision: **`0b60d0664394d0e3a8790d693af858e1d7960507`**. Phase 5.3 implementation/evidence `732a110` / `0913b60` were pushed and [CI passed](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46143424358) before this subphase began.
+
+Exact full local gate, run in the persistent Ubuntu WSL Docker Engine + Compose copy (`/home/sandaru/estateflow-phase04`) with Node 24.22.3 and the existing Python virtual environment:
+
+```sh
+export PATH=/home/sandaru/.nvm/versions/node/v24.22.3/bin:/usr/local/bin:/usr/bin:/bin
+source /home/sandaru/.venvs/estateflow/bin/activate
+python project/tests/integration/identity_acceptance.py
+```
+
+The runner executed these commands in order, provisioning disposable database/runtime roles and applying their existing grants before the service suites:
+
+```sh
+# cwd: project/frontend; ESTATEFLOW_TEST_IDENTITY_STACK=0
+npm run lint
+npm run build
+npm run typecheck
+npm run test:e2e
+# cwd: repository root, after starting disposable PostgreSQL 17
+python -m alembic -c project/alembic.ini upgrade head
+python -m alembic -c project/alembic.ini current --check-heads
+python -W error::ResourceWarning -m unittest discover -s project/services/property/tests -v
+python -W error::ResourceWarning -m unittest discover -s project/services/engagement/tests -v
+# cwd: project/frontend, after Compose builds and starts all five services; ESTATEFLOW_TEST_IDENTITY_STACK=1
+npm run test:e2e
+```
+
+| Check | Final local observed result |
+| --- | --- |
+| Frontend lint, production build and typecheck | Passed. |
+| Standalone checks | **14 passed**, 19.6 s: the unchanged **11 OIDC tests** plus **3 search navigation/price checks**. |
+| Database / Property | Alembic **0001 (head)**; original one-publication SQL fixture assertions passed; PostgreSQL **17**, scoped **estateflow_property** login, **37 tests passed**, 15.612 s. Existing and new privilege-denial probes passed without additional grants. |
+| Engagement | **9 tests passed**, 1.975 s. |
+| Compose browser acceptance | **7 passed**, 45.1 s, including the full search workflow, focused search UI, identity/recovery, drafts, publication lifecycle/unavailable access, and showcase UI. |
+
+The runner exited **0** and removed its disposable containers/network. After the final pagination assertion, `npm --prefix project/frontend run lint` and `npm --prefix project/frontend run typecheck` also passed on the final test source.
+
+The new browser case verified all four vehicle modes; required-mode confirmed-first ordering and explicit unknown status; a per-perch plot included at a LKR 5,500,000 maximum and excluded at LKR 4,500,000 or a LKR 5,500,000 minimum; acre-to-perch land minima and square-metre-to-square-foot floor minima; zero bedrooms/parking distinct from unknowns; unpublished exclusion and `404`; unauthorized search `401`; no-store API/frontend responses; no private phone/address/pin or service credential values in results/DOM; search and nested listing context sign-in resume; exact Back-to-Search URL/control/result restoration; and pagination. Desktop **1280×800** and mobile **390×844** screenshots were inspected, with document and individual-card overflow assertions passing.
+
+The original `listings.sql`, `assert_database.sql`, `sign-in.spec.ts`, and `identity-stack.spec.ts` are unchanged. GitHub Actions verification of the pushed Phase 5.4 implementation/evidence head is the remaining gate before Phase 5 completion is ticked.
+
+## Implementation decisions
+
+- `search-fixtures.ts` creates an isolated town namespace containing spaces and literal `%_!`. A verified seller uses the normal draft → encrypted private detail → authored showcase → explicit publish APIs for three listings; a fourth retains an authored showcase without publication. These runtime fixtures do not alter the Phase 1 SQL seed/assertions.
+- `search-stack.spec.ts` exercises a signed-in buyer browser plus an independent fresh browser for listing-deep-link sign-in. It verifies exact query restoration through both search and listing return contexts, access modes, zero bedroom/parking values, public/private isolation, budget and cross-unit filters, pagination, and desktop/mobile rendering. No direct database fixture writes or authentication bypasses are used by this Compose test.
+- Existing Playwright `*-stack.spec.ts` discovery and the complete `identity_acceptance.py` runner automatically include the new test. CI job/step names and the runner description now mention search. No additional grants, migrations or application changes are needed in this final subphase.
