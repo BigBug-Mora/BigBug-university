@@ -6,7 +6,7 @@ Verify the complete Phase 4 seller-to-buyer publication flow across two authenti
 
 ## Progress
 
-- [ ] Add `project/frontend/tests/publication-stack.spec.ts` running against the full local Compose stack (`frontend` + `property-service` + `engagement-service` + PostgreSQL 17 + `identity-fixture`):
+- [x] Add `project/frontend/tests/publication-stack.spec.ts` running against the full local Compose stack (`frontend` + `property-service` + `engagement-service` + PostgreSQL 17 + `identity-fixture`):
   - Seller signs in, creates a house draft with required fields and an active phone number, authors/applies a showcase fixture, previews it, and publishes the matching `(revision, showcase)` pair.
   - Signed-in buyer opens `/buyer/listings/{listingId}` and sees the published headline and original price (with the no-photo architectural header and no broken images).
   - Unauthenticated direct access to `/buyer/listings/{listingId}` redirects to `/sign-in?returnTo=...` and resumes the published listing after sign-in.
@@ -24,7 +24,42 @@ Verify the complete Phase 4 seller-to-buyer publication flow across two authenti
 
 ## Evidence
 
-*(To be recorded after final verification runs.)*
+Local verification date: **2026-11-28 (Asia/Colombo)**. Implementation revision: **`962e630f53b0cfc045ba29af4fa71ddd7ef5464a`**. Phase 4.3 was committed and pushed first as `8ef34ba`, with [successful CI](https://github.com/BigBug-Mora/BigBug-university/actions/runs/46138700823).
+
+The complete local gate ran from `/home/sandaru/estateflow-phase04` using Ubuntu WSL Docker Engine + Compose, the existing Python virtual environment, Node 24, and Playwright Chromium 1255:
+
+```sh
+python project/tests/integration/identity_acceptance.py
+```
+
+That runner executes these commands, in this order, with standalone fixture mode isolated from the real stack:
+
+```sh
+npm --prefix project/frontend run lint
+npm --prefix project/frontend run build
+npm --prefix project/frontend run typecheck
+npm --prefix project/frontend run test:e2e
+python -m alembic -c project/alembic.ini upgrade head
+python -m alembic -c project/alembic.ini current --check-heads
+python -W error::ResourceWarning -m unittest discover -s project/services/property/tests -v
+python -W error::ResourceWarning -m unittest discover -s project/services/engagement/tests -v
+# After Compose builds and starts all five services, with ESTATEFLOW_TEST_IDENTITY_STACK=1:
+npm --prefix project/frontend run test:e2e
+```
+
+The runner additionally provisions both scoped runtime logins, applies `infra/aws/grant-property-runtime.sql` as the migrator, loads fictional fixtures, and runs schema assertions before the service suites. It exited **0** and removed its disposable containers/network.
+
+| Check | Final local observed result |
+| --- | --- |
+| Frontend lint, production build, TypeScript | All passed. |
+| Standalone OIDC browser tests | **11/11 passed**, 23.7 s; original `sign-in.spec.ts` unchanged. |
+| PostgreSQL / Property | Alembic **0001 (head)**, PostgreSQL **17**, runtime login **estateflow_property**, **26 tests passed**, 10.199 s. DDL, cross-schema, immutable-publication/showcase and seller-identity privilege-denial probes passed. |
+| Engagement | **9 tests passed**, 2.126 s. |
+| Full-stack browsers | **5/5 passed**, 40.3 s: drafts, identity/recovery, two-account publication lifecycle, unpublished/malformed listing access, and showcase UI/desktop/mobile presentation. |
+
+The publication lifecycle used a seller browser to publish **LKR 15,000,000**, a separate unauthenticated buyer browser to sign in and resume that exact UUID listing, a private seller edit to **LKR 18,000,000**, buyer refresh/API checks retaining the original snapshot, explicit stale-pair **409** (API and UI), updated showcase preview/publication, and buyer refresh showing the new price and headline. The second publication test verified **401**, unpublished **404**, malformed-ID **422**, no-store headers, and rejection of the standalone slug by the real frontend stack. Published pages contained no image elements or private phone values.
+
+GitHub Actions verification: **pending the pushed Phase 4.4 revision**. Phase 4 completion and the roadmap checkbox remain open until CI succeeds.
 
 ## Implementation decisions
 
