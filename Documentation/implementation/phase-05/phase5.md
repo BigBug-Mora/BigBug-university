@@ -4,7 +4,7 @@ Let signed-in buyers filter published houses, apartments, and land using structu
 
 ## Progress and order
 
-- [ ] [5.1 · Property structured search endpoint](phase5.1.md). Add `GET /published-listings` behind `require_frontend_actor`, querying `property.public_listings` with tri-state vehicle access filtering, calculated total-price range filtering, area-unit normalization, and `Cache-Control: no-store`.
+- [x] [5.1 · Property structured search endpoint](phase5.1.md). Add `GET /published-listings` behind `require_frontend_actor`, querying `property.public_listings` with tri-state vehicle access filtering, calculated total-price range filtering, area-unit normalization, and `Cache-Control: no-store`.
 - [ ] [5.2 · Search fixtures and PostgreSQL integration tests](phase5.2.md). Verify published fixtures for confirmed, false, and unknown vehicle access plus `per_unit` land pricing in `project/services/property/tests/test_search.py`, keeping private details and unpublished drafts excluded.
 - [ ] [5.3 · Buyer Search UI and Back-to-Search restoration](phase5.3.md). Build `/buyer/search` in `project/frontend/` styled per [UI design](../../mvp/containers/frontend/ui.md), preserve search params across sign-in redirects, and restore the prior query and results on **Back to Search** from `/buyer/listings/[listingId]`.
 - [ ] [5.4 · CI and end-to-end search acceptance](phase5.4.md). Add `project/frontend/tests/search-stack.spec.ts` to verify filtering, calculated land totals, tri-state vehicle access, and Back-to-Search navigation across the full local Compose stack and CI.
